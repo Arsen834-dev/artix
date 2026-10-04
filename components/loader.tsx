@@ -319,16 +319,12 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
     <AnimatePresence>
       {!isDone && (
         <motion.div
-        initial={{ opacity: 1, scale: 1 }}
-        exit={{
-            opacity: 0,
-            scale: 1.3,
-            filter: 'blur(20px)',
-        }}
-        transition={{ duration: 1.2, ease: [0.65, 0, 0.35, 1] }}
-        className="fixed inset-0 z-[9999] overflow-hidden bg-[#0a0a0f]"
-        >          
-        {/* 🔽 ПРОЦЕНТЫ СЗАДИ (z-0) */}
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.8, ease: 'easeInOut' }}
+          className="fixed inset-0 z-[9999] overflow-hidden bg-[#0a0a0f]"
+        >
+            {/* 🔽 ПРОЦЕНТЫ СЗАДИ (z-0) */}
           <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.7 }}

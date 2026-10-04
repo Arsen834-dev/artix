@@ -15,9 +15,7 @@ async function ArtistsList() {
 
   if (error || !profiles) {
     return (
-      <div className="py-20 text-center text-white/60">
-        Ошибка загрузки 😢
-      </div>
+      <div className="py-20 text-center text-white/60">Ошибка загрузки 😢</div>
     );
   }
 
@@ -37,12 +35,10 @@ async function ArtistsList() {
           href={`/artist/${profile.username}`}
           className="group"
         >
-          <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-[#16161f]/60 p-6 text-center transition-all duration-500 hover:border-[#6C63FF]/40 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#6C63FF]/20">
-            {/* Свечение при hover */}
+          <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-[#16161f]/60 p-6 text-center transition-all duration-500 hover:-translate-y-1 hover:border-[#6C63FF]/40 hover:shadow-2xl hover:shadow-[#6C63FF]/20">
             <div className="pointer-events-none absolute -top-20 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-[#6C63FF]/20 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
 
             <div className="relative">
-              {/* Аватар */}
               <div className="relative mx-auto mb-4 h-24 w-24">
                 {profile.avatar_url ? (
                   <img
@@ -62,20 +58,17 @@ async function ArtistsList() {
                 )}
               </div>
 
-              {/* Имя */}
               <h3 className="display-title text-xl font-bold text-white transition group-hover:text-[#B794F6]">
                 {profile.display_name}
               </h3>
               <p className="mt-1 text-sm text-white/40">@{profile.username}</p>
 
-              {/* Био */}
               {profile.bio && (
                 <p className="mt-4 line-clamp-2 text-sm text-white/60">
                   {profile.bio}
                 </p>
               )}
 
-              {/* Бейдж */}
               <div className="mt-4 flex items-center justify-center gap-2">
                 <span className="flex items-center gap-1 rounded-full bg-[#6C63FF]/20 px-3 py-1 text-xs font-medium text-[#B794F6]">
                   <Palette className="h-3 w-3" />
@@ -102,8 +95,7 @@ function ArtistsSkeleton() {
 
 export default function ArtistsPage() {
   return (
-    <div className="container mx-auto px-4 py-12">
-      {/* Заголовок */}
+    <div className="container mx-auto px-4 py-12 pt-24">
       <div className="mb-12 text-center">
         <h1 className="display-title text-5xl font-bold md:text-7xl">
           <span className="gradient-text">Художники</span>

@@ -7,7 +7,6 @@ import {
   Star,
   Heart,
   Image as ImageIcon,
-  MessageCircle,
   Calendar,
   Palette,
   Send,
@@ -22,6 +21,7 @@ import {
   ShoppingBag,
   Users,
   MessageSquare,
+  Settings,
 } from 'lucide-react';
 import { StartChatButton } from './start-chat-button';
 import { ReviewsList } from './reviews-list';
@@ -328,6 +328,7 @@ export function ArtistPageContent({
   reviews,
   avgRating,
   totalLikes,
+  userId,
 }: {
   profile: Profile;
   artworks: Artwork[];
@@ -336,6 +337,7 @@ export function ArtistPageContent({
   reviews: Review[];
   avgRating: number;
   totalLikes: number;
+  userId: string;
 }) {
   const joinDate = new Date(profile.created_at).toLocaleDateString('ru-RU', {
     year: 'numeric',
@@ -344,6 +346,7 @@ export function ArtistPageContent({
 
   const isArtist = profile.role === 'artist' || profile.role === 'both';
   const isClient = profile.role === 'client' || profile.role === 'both';
+  const isOwnProfile = profile.id === userId;
 
   const tabs: Array<{
     key: 'artworks' | 'services' | 'orders' | 'reviews';
@@ -364,7 +367,7 @@ export function ArtistPageContent({
   const [activeTab, setActiveTab] = useState(tabs[0]?.key || 'artworks');
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pt-24">
       <Link
         href="/feed"
         className="group mb-8 inline-flex items-center gap-2 text-sm text-white/60 transition hover:text-white"
@@ -380,7 +383,6 @@ export function ArtistPageContent({
         Назад в галактику
       </Link>
 
-      {/* ШАПКА ПРОФИЛЯ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -462,7 +464,6 @@ export function ArtistPageContent({
                 )}
               </motion.div>
 
-              {/* Рейтинг */}
               {reviews.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -486,8 +487,7 @@ export function ArtistPageContent({
                     {avgRating.toFixed(1)}
                   </span>
                   <span className="text-sm text-white/40">
-                    ({reviews.length}{' '}
-                    {reviews.length === 1 ? 'отзыв' : 'отзывов'})
+                    ({reviews.length} {reviews.length === 1 ? 'отзыв' : 'отзывов'})
                   </span>
                 </motion.div>
               )}
@@ -547,18 +547,30 @@ export function ArtistPageContent({
                   </div>
                 </div>
               )}
-              <StartChatButton
-                targetUserId={profile.id}
-                className="group relative overflow-hidden rounded-full border border-white/10 bg-white px-6 py-3 text-sm font-semibold text-black transition-all duration-500 hover:scale-105"
-              >
-                Написать
-              </StartChatButton>
+
+              {isOwnProfile ? (
+                <Link
+                  href="/settings/profile"
+                  className="group relative overflow-hidden rounded-full border border-white/10 bg-white px-6 py-3 text-sm font-semibold text-black transition-all duration-500 hover:scale-105"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Редактировать профиль
+                  </span>
+                </Link>
+              ) : (
+                <StartChatButton
+                  targetUserId={profile.id}
+                  className="group relative overflow-hidden rounded-full border border-white/10 bg-white px-6 py-3 text-sm font-semibold text-black transition-all duration-500 hover:scale-105"
+                >
+                  Написать
+                </StartChatButton>
+              )}
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* ТАБЫ */}
       <div className="mb-8 flex justify-center md:justify-start">
         <div className="glass scrollbar-hide inline-flex gap-1 overflow-x-auto rounded-full p-1">
           {tabs.map((t) => {

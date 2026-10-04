@@ -6,6 +6,10 @@ import { ArtistPageContent } from '@/components/artist-page-content';
 async function ArtistContent({ username }: { username: string }) {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   // Профиль
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -21,14 +25,12 @@ async function ArtistContent({ username }: { username: string }) {
     notFound();
   }
 
-  // Работы
   const { data: artworks } = await supabase
     .from('artworks')
     .select('id, title, image_url, price, likes_count, category')
     .eq('artist_id', profile.id)
     .order('created_at', { ascending: false });
 
-  // Услуги
   const { data: services } = await supabase
     .from('services')
     .select('id, title, image_url, price, price_type, price_to, category, delivery_days, tags')
@@ -36,14 +38,12 @@ async function ArtistContent({ username }: { username: string }) {
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
-  // Заказы
   const { data: orders } = await supabase
     .from('orders')
     .select('id, title, image_url, budget, budget_type, budget_to, category, deadline_days, tags, status, responses_count, created_at')
     .eq('client_id', profile.id)
     .order('created_at', { ascending: false });
 
-  // Отзывы
   const { data: reviews } = await supabase
     .from('reviews')
     .select(`
@@ -53,13 +53,11 @@ async function ArtistContent({ username }: { username: string }) {
     .eq('target_id', profile.id)
     .order('created_at', { ascending: false });
 
-  // Средний рейтинг
   const avgRating =
     reviews && reviews.length > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : 0;
 
-  // Статистика
   const totalLikes = (artworks || []).reduce(
     (sum, art) => sum + (art.likes_count || 0),
     0
@@ -110,13 +108,14 @@ async function ArtistContent({ username }: { username: string }) {
       }))}
       avgRating={avgRating}
       totalLikes={totalLikes}
+      userId={user?.id || ''}
     />
   );
 }
 
 function ArtistSkeleton() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pt-24">
       <div className="mb-10 h-64 animate-pulse rounded-3xl bg-white/5" />
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (

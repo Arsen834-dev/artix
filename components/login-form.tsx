@@ -29,19 +29,26 @@ export function LoginForm({
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
       if (error) throw error;
-      router.push('/feed');
+
+      if (data.session) {
+        // 🎯 Жёсткий редирект — гарантированно работает
+        window.location.href = '/feed';
+      } else {
+        setError('Не удалось создать сессию');
+        setIsLoading(false);
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'Произошла ошибка');
-    } finally {
       setIsLoading(false);
     }
   };
-
+  
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <motion.div
