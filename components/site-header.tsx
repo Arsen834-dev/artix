@@ -41,7 +41,7 @@ export function SiteHeader() {
     { href: '/feed', label: 'Работы', icon: ImageIcon },
     { href: '/services', label: 'Услуги', icon: Briefcase },
     { href: '/orders', label: 'Заказы', icon: ShoppingBag },
-    { href: '/artists', label: 'Художники', icon: Users },
+    { href: '/artist', label: 'Художники', icon: Users },
     { href: '/about', label: 'О проекте', icon: Info },
   ];
 

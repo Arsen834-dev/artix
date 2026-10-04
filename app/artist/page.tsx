@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Star, Palette, ShoppingBag } from 'lucide-react';
+import { Star, Palette } from 'lucide-react';
 
 async function ArtistsList() {
   const supabase = await createClient();
@@ -73,7 +73,7 @@ async function ArtistsList() {
                 </p>
               )}
 
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <div className="mt-4 flex items-center justify-center gap-2">
                 <span className="flex items-center gap-1 rounded-full bg-[#6C63FF]/20 px-3 py-1 text-xs font-medium text-[#B794F6]">
                   <Palette className="h-3 w-3" />
                   Художник
