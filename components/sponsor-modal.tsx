@@ -19,8 +19,8 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
   const [copied, setCopied] = useState(false);
   const [step, setStep] = useState<'info' | 'payment'>('info');
 
-  const cardNumber = '2202 2020 2020 2020'; // ← ЗАМЕНИ НА СВОЙ
-  const telegramUsername = '@artix_support'; // ← ЗАМЕНИ
+  const cardNumber = '2202 2020 2020 2020'; // ⚠️ ЗАМЕНИ
+  const telegramUsername = '@artix_support'; // ⚠️ ЗАМЕНИ
 
   const handleCopy = () => {
     navigator.clipboard.writeText(cardNumber.replace(/\s/g, ''));
@@ -45,12 +45,10 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
           exit={{ scale: 0.9, opacity: 0, y: 40 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative z-10 flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-yellow-400/20 bg-gradient-to-b from-[#1a1620] to-[#0f0d14]"
+          className="relative z-10 flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-yellow-400/20 bg-gradient-to-b from-[#1a1620] to-[#0f0d14]"
         >
-          {/* Свечение */}
           <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-yellow-400/30 blur-[100px]" />
 
-          {/* Кнопка закрытия */}
           <button
             onClick={onClose}
             className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
@@ -58,9 +56,7 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
             <X className="h-4 w-4" />
           </button>
 
-          {/* СКРОЛЛ-КОНТЕНТ */}
           <div className="flex-1 overflow-y-auto">
-            {/* Заголовок */}
             <div className="relative border-b border-white/5 p-8 text-center">
               <motion.div
                 animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }}
@@ -83,9 +79,7 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
               </p>
             </div>
 
-            {/* Контент */}
             <div className="space-y-5 p-6">
-              {/* ТАРИФ */}
               <div className="relative overflow-hidden rounded-3xl border-2 border-yellow-400/40 bg-gradient-to-br from-yellow-400/10 via-orange-400/5 to-transparent p-6">
                 <div className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-yellow-400 px-3 py-1 text-[10px] font-bold text-black shadow-lg">
                   <Zap className="h-3 w-3 fill-current" />
@@ -112,13 +106,12 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
                 </ul>
               </div>
 
-              {/* ПЕРЕКЛЮЧАТЕЛЬ ШАГОВ */}
               {step === 'info' && (
                 <button
                   onClick={() => setStep('payment')}
                   className="group relative w-full overflow-hidden rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 px-6 py-4 font-bold text-black shadow-2xl shadow-yellow-400/40 transition-all hover:scale-[1.02]"
                 >
-                  <Heart className="inline-block h-5 w-5 fill-current mr-2" />
+                  <Heart className="mr-2 inline-block h-5 w-5 fill-current" />
                   Поддержать за 150₽
                 </button>
               )}

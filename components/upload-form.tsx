@@ -46,7 +46,7 @@ export function UploadForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Какие табы показывать
-  const canPostArtwork = role === 'artist' || role === 'both';
+  const canPostArtwork = true;
   const canPostService = role === 'artist' || role === 'both';
   const canPostOrder = role === 'client' || role === 'both';
 

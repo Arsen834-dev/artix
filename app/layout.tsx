@@ -28,23 +28,21 @@ export const metadata: Metadata = {
   title: 'Artix — космическая биржа художников',
   description:
     'Платформа для художников и их заказчиков. Найди художника или продай свои работы.',
-  // 🎯 Favicon
   icons: {
     icon: [
+      { url: '/favicon.ico', sizes: 'any' },
       { url: '/logo-64.png', sizes: '64x64', type: 'image/png' },
       { url: '/logo.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: '/logo.png',
-    shortcut: '/logo-64.png',
+    shortcut: '/favicon.ico',
   },
-  // 🎯 OpenGraph (для соцсетей)
   openGraph: {
     title: 'Artix — космическая биржа художников',
     description: 'Найди художника или продай свои работы',
     images: ['/logo.png'],
     type: 'website',
   },
-  // 🎯 Twitter Card
   twitter: {
     card: 'summary_large_image',
     title: 'Artix — космическая биржа художников',

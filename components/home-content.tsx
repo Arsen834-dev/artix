@@ -21,23 +21,22 @@ export function HomeContent({
   const [isLoading, setIsLoading] = useState(true);
   const [showHero, setShowHero] = useState(false);
 
+  // 🎯 Скрыть скролл на главной
   useEffect(() => {
-    document.body.dataset.page = 'home';
     document.body.style.overflow = 'hidden';
-
-    if (isLoading) {
-      document.body.dataset.loading = 'true';
-      setShowHero(false);
-    } else {
-      document.body.dataset.loading = 'false';
-      // 🎯 Просто показываем hero, без завесы
-      setShowHero(true);
-    }
+    document.body.dataset.page = 'home';
 
     return () => {
-      delete document.body.dataset.page;
       document.body.style.overflow = '';
+      delete document.body.dataset.page;
     };
+  }, []);
+
+  // 🎯 Лоадер → hero
+  useEffect(() => {
+    if (!isLoading) {
+      setShowHero(true);
+    }
   }, [isLoading]);
 
   return (

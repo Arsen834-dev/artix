@@ -27,6 +27,9 @@ async function ArtworkContent({ id }: { id: string }) {
     notFound();
   }
 
+  // 🎯 Инкремент просмотров
+  await supabase.rpc('increment_artwork_views', { artwork_id: parseInt(id) });
+
   const artist = Array.isArray(artwork.artist)
     ? artwork.artist[0]
     : artwork.artist;
@@ -70,6 +73,7 @@ async function ArtworkContent({ id }: { id: string }) {
         category: item.category,
         artist: Array.isArray(item.artist) ? item.artist[0] : item.artist,
       }))}
+      userId={user?.id || ''}
     />
   );
 }

@@ -6,6 +6,10 @@ import { OrderPageContent } from '@/components/order-page-content';
 async function OrderContent({ id }: { id: string }) {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data: order, error } = await supabase
     .from('orders')
     .select(`
@@ -23,6 +27,9 @@ async function OrderContent({ id }: { id: string }) {
     notFound();
   }
 
+  // 🎯 Инкремент просмотров
+  await supabase.rpc('increment_order_views', { order_id: parseInt(id) });
+
   const client = Array.isArray(order.client) ? order.client[0] : order.client;
 
   return (
@@ -31,13 +38,14 @@ async function OrderContent({ id }: { id: string }) {
         ...order,
         client,
       }}
+      userId={user?.id || ''}
     />
   );
 }
 
 function OrderSkeleton() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pt-24">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <div className="h-12 w-3/4 animate-pulse rounded bg-white/5" />

@@ -6,6 +6,10 @@ import { ServicePageContent } from '@/components/service-page-content';
 async function ServiceContent({ id }: { id: string }) {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data: service, error } = await supabase
     .from('services')
     .select(`
@@ -22,11 +26,13 @@ async function ServiceContent({ id }: { id: string }) {
     notFound();
   }
 
+  // 🎯 Инкремент просмотров
+  await supabase.rpc('increment_service_views', { service_id: parseInt(id) });
+
   const artist = Array.isArray(service.artist)
     ? service.artist[0]
     : service.artist;
 
-  // Похожие услуги (та же категория, не эта)
   const { data: similar } = await supabase
     .from('services')
     .select(`
@@ -54,13 +60,14 @@ async function ServiceContent({ id }: { id: string }) {
         category: item.category,
         artist: Array.isArray(item.artist) ? item.artist[0] : item.artist,
       }))}
+      userId={user?.id || ''}
     />
   );
 }
 
 function ServiceSkeleton() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pt-24">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="aspect-video animate-pulse rounded-3xl bg-white/5 lg:col-span-2" />
         <div className="space-y-4">

@@ -57,6 +57,9 @@ export function ProfileEditForm({
   const router = useRouter();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  
+  // 🎯 Запоминаем исходную роль
+  const originalRole = profile.role;
 
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url);
   const [coverUrl, setCoverUrl] = useState(profile.cover_url);
@@ -396,6 +399,24 @@ export function ProfileEditForm({
                 Оба — может всё.
               </div>
             </div>
+
+            {/* 🎯 ПРЕДУПРЕЖДЕНИЕ ПРИ СМЕНЕ РОЛИ */}
+            {role !== originalRole && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-sm text-yellow-300"
+              >
+                <div className="mb-2 font-semibold">
+                  ⚠️ Внимание, ты меняешь роль
+                </div>
+                <ul className="list-disc space-y-1 pl-5 text-xs">
+                  <li>Услуги и заказы НЕ удаляются — просто скрываются</li>
+                  <li>Услуги вернутся, если снова станешь художником</li>
+                  <li>Заказы вернутся, если снова станешь заказчиком</li>
+                </ul>
+              </motion.div>
+            )}
 
             <div>
               <label

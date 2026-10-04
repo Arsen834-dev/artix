@@ -15,6 +15,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { DealModal } from './deal-modal';
+import { DeleteButton } from './delete-button';
 
 const CATEGORY_LABELS: Record<string, string> = {
   portrait: 'Портреты',
@@ -73,8 +74,15 @@ function formatDeadline(days: number | null): string {
   return `${days} дней`;
 }
 
-export function OrderPageContent({ order }: { order: Order }) {
+export function OrderPageContent({
+  order,
+  userId,
+}: {
+  order: Order;
+  userId: string;
+}) {
   const [showDeal, setShowDeal] = useState(false);
+  const isOwner = order.client.id === userId;
 
   const createdDate = new Date(order.created_at).toLocaleDateString('ru-RU', {
     day: 'numeric',
@@ -84,7 +92,7 @@ export function OrderPageContent({ order }: { order: Order }) {
 
   return (
     <>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <Link
           href="/orders"
           className="group mb-8 inline-flex items-center gap-2 text-sm text-white/60 transition hover:text-white"
@@ -184,19 +192,22 @@ export function OrderPageContent({ order }: { order: Order }) {
                 Срок: {formatDeadline(order.deadline_days)}
               </div>
 
-              {/* 🎯 ГЛАВНАЯ КНОПКА — ОТКЛИКНУТЬСЯ */}
-              <button
-                onClick={() => setShowDeal(true)}
-                className="group relative mt-5 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#4FD1C5] to-[#68D391] px-6 py-3 font-medium text-white shadow-lg shadow-[#4FD1C5]/30 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-[#4FD1C5]/50"
-              >
-                <Shield className="h-4 w-4" />
-                Откликнуться безопасно
-              </button>
+              {!isOwner && (
+                <button
+                  onClick={() => setShowDeal(true)}
+                  className="group relative mt-5 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#4FD1C5] to-[#68D391] px-6 py-3 font-medium text-white shadow-lg shadow-[#4FD1C5]/30 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-[#4FD1C5]/50"
+                >
+                  <Shield className="h-4 w-4" />
+                  Откликнуться безопасно
+                </button>
+              )}
 
-              <div className="mt-3 flex items-center justify-center gap-1 text-[10px] text-white/40">
-                <Shield className="h-3 w-3" />
-                Деньги защищены платформой
-              </div>
+              {!isOwner && (
+                <div className="mt-3 flex items-center justify-center gap-1 text-[10px] text-white/40">
+                  <Shield className="h-3 w-3" />
+                  Деньги защищены платформой
+                </div>
+              )}
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-[#16161f]/60 p-6 backdrop-blur-sm">
@@ -238,11 +249,20 @@ export function OrderPageContent({ order }: { order: Order }) {
                 </p>
               )}
             </div>
+
+            {/* 🎯 КНОПКА УДАЛЕНИЯ — только для автора */}
+            {isOwner && (
+              <DeleteButton
+                table="orders"
+                id={order.id}
+                redirectTo="/orders"
+                label="Удалить заказ"
+              />
+            )}
           </div>
         </motion.div>
       </div>
 
-      {/* 🎯 МОДАЛКА СДЕЛКИ */}
       {showDeal && (
         <DealModal
           artistId={order.client.id}

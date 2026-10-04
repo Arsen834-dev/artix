@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Star, MessageCircle, Eye, Tag } from 'lucide-react';
 import { LikeButton } from './like-button';
+import { DeleteButton } from './delete-button';
 
 const CATEGORY_LABELS: Record<string, string> = {
   portrait: 'Портреты',
@@ -61,13 +62,16 @@ type SimilarArtwork = {
 export function ArtworkPageContent({
   artwork,
   similar,
+  userId,
 }: {
   artwork: Artwork;
   similar: SimilarArtwork[];
+  userId: string;
 }) {
+  const isOwner = artwork.artist.id === userId;
+
   return (
     <div className="container mx-auto px-4 py-8 pt-24">
-      {/* Назад */}
       <Link
         href="/feed"
         className="group mb-8 inline-flex items-center gap-2 text-sm text-white/60 transition hover:text-white"
@@ -82,7 +86,6 @@ export function ArtworkPageContent({
         transition={{ duration: 0.6 }}
         className="grid grid-cols-1 gap-10 lg:grid-cols-3"
       >
-        {/* КАРТИНКА СЛЕВА */}
         <div className="lg:col-span-2">
           <div className="group relative">
             <div className="absolute inset-0 scale-95 rounded-3xl bg-gradient-to-br from-[#6C63FF]/40 to-[#4FD1C5]/30 blur-3xl" />
@@ -94,7 +97,6 @@ export function ArtworkPageContent({
                 className="h-auto w-full object-cover"
               />
 
-              {/* 🎯 ЛАЙК ПОВЕРХ КАРТИНКИ */}
               <div className="absolute bottom-4 right-4 z-10">
                 <div className="rounded-full border border-white/10 bg-black/60 px-3 py-2 backdrop-blur-md">
                   <LikeButton
@@ -108,7 +110,6 @@ export function ArtworkPageContent({
             </div>
           </div>
 
-          {/* Описание */}
           {artwork.description && (
             <div className="mt-8">
               <h3 className="display-title mb-3 text-xl text-white">
@@ -120,7 +121,6 @@ export function ArtworkPageContent({
             </div>
           )}
 
-          {/* Теги */}
           {artwork.tags && artwork.tags.length > 0 && (
             <div className="mt-8">
               <div className="mb-3 flex items-center gap-2 text-sm text-white/40">
@@ -141,7 +141,6 @@ export function ArtworkPageContent({
           )}
         </div>
 
-        {/* ИНФО СПРАВА */}
         <div className="space-y-6">
           <div className="flex flex-wrap items-center gap-2">
             <span className="glass rounded-full px-3 py-1 text-xs font-medium text-white/90">
@@ -170,7 +169,6 @@ export function ArtworkPageContent({
             </span>
           </div>
 
-          {/* Цена + кнопка */}
           {artwork.price > 0 && (
             <div className="rounded-2xl border border-white/10 bg-[#16161f]/60 p-6 backdrop-blur-sm">
               <div className="text-xs uppercase tracking-wider text-white/40">
@@ -180,14 +178,15 @@ export function ArtworkPageContent({
                 {artwork.price.toLocaleString('ru-RU')}₽
               </div>
 
-              <button className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#6C63FF] to-[#B794F6] px-6 py-3 font-medium text-white shadow-lg shadow-[#6C63FF]/30 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-[#6C63FF]/50">
-                <MessageCircle className="h-4 w-4" />
-                Написать автору
-              </button>
+              {!isOwner && (
+                <button className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#6C63FF] to-[#B794F6] px-6 py-3 font-medium text-white shadow-lg shadow-[#6C63FF]/30 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-[#6C63FF]/50">
+                  <MessageCircle className="h-4 w-4" />
+                  Написать автору
+                </button>
+              )}
             </div>
           )}
 
-          {/* Автор */}
           <div className="rounded-2xl border border-white/10 bg-[#16161f]/60 p-6 backdrop-blur-sm">
             <div className="mb-4 text-xs uppercase tracking-wider text-white/40">
               Автор
@@ -227,10 +226,19 @@ export function ArtworkPageContent({
               </p>
             )}
           </div>
+
+          {/* 🎯 КНОПКА УДАЛЕНИЯ — только для автора */}
+          {isOwner && (
+            <DeleteButton
+              table="artworks"
+              id={artwork.id}
+              redirectTo="/feed"
+              label="Удалить работу"
+            />
+          )}
         </div>
       </motion.div>
 
-      {/* ПОХОЖИЕ РАБОТЫ */}
       {similar.length > 0 && (
         <div className="mt-20">
           <h2 className="display-title mb-8 text-3xl font-bold text-white md:text-4xl">
