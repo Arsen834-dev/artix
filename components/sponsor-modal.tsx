@@ -39,7 +39,7 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
         onClick={onClose}
       >
         {/* 🎯 ВНУТРЕННИЙ — центрирование через flex */}
-        <div className="flex min-h-full items-center justify-center p-4">
+        <div className="flex min-h-full items-start justify-center p-4 py-8">
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
