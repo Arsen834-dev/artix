@@ -52,18 +52,18 @@ export function CustomCursor() {
 
   return (
     <>
-      {/* Точка */}
+      {/* 🎯 Точка */}
       <div
         ref={dotRef}
-        className="pointer-events-none fixed left-0 top-0 z-[9999]"
+        className="pointer-events-none fixed left-0 top-0 z-[999999]"
       >
         <div className="h-2 w-2 rounded-full bg-[#B794F6]" />
       </div>
 
-      {/* Шлейф */}
+      {/* 🎯 Шлейф */}
       <div
         ref={trailRef}
-        className="pointer-events-none fixed left-0 top-0 z-[9998] rounded-full border border-[#B794F6]/50 transition-[width,height,background] duration-300"
+        className="pointer-events-none fixed left-0 top-0 z-[999998] rounded-full border border-[#B794F6]/50 transition-[width,height,background] duration-300"
         style={{ width: 24, height: 24 }}
       />
     </>
