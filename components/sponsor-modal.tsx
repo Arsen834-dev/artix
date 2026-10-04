@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -16,21 +17,20 @@ import {
 } from 'lucide-react';
 
 export function SponsorModal({ onClose }: { onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [step, setStep] = useState<'info' | 'payment'>('info');
 
   const cardNumber = '2202 2088 7480 3472';
   const discordUsername = 'fl4wer834';
 
-  // 🎯 Блокируем Lenis пока модалка открыта
+  // 🎯 Ждём монтирования клиента для Portal
   useEffect(() => {
-    document.body.setAttribute('data-modal-open', 'true');
-    const originalOverflow = document.body.style.overflow;
+    setMounted(true);
     document.body.style.overflow = 'hidden';
 
     return () => {
-      document.body.removeAttribute('data-modal-open');
-      document.body.style.overflow = originalOverflow;
+      document.body.style.overflow = '';
     };
   }, []);
 
@@ -40,16 +40,19 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  return (
+  if (!mounted) return null;
+
+  // 🎯 PORTAL — рендер в document.body
+  return createPortal(
     <AnimatePresence>
-      {/* 🎯 ВНЕШНИЙ — data-lenis-prevent */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90 backdrop-blur-md"
+        className="fixed inset-0 z-[99999] overflow-y-auto bg-black/90 backdrop-blur-md"
         onClick={onClose}
         data-lenis-prevent
+        style={{ isolation: 'isolate' }}
       >
         <div className="flex min-h-full items-center justify-center p-4">
           <motion.div
@@ -188,7 +191,8 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
           </motion.div>
         </div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body // 🎯 РЕНДЕРИМ В BODY
   );
 }
 
