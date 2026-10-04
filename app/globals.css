@@ -139,3 +139,19 @@ body:not([data-page="home"]) main {
   0%, 100% { transform: translate(-50%, -50%) scale(1); }
   50% { transform: translate(calc(-50% + 60px), calc(-50% - 40px)) scale(1.15); }
 }
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}

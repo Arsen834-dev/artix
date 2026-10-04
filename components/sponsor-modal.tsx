@@ -22,11 +22,14 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
   const cardNumber = '2202 2088 7480 3472';
   const discordUsername = 'fl4wer834';
 
+  // 🎯 Блокируем Lenis пока модалка открыта
   useEffect(() => {
+    document.body.setAttribute('data-modal-open', 'true');
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
     return () => {
+      document.body.removeAttribute('data-modal-open');
       document.body.style.overflow = originalOverflow;
     };
   }, []);
@@ -39,7 +42,7 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
 
   return (
     <AnimatePresence>
-      {/* 🎯 ВНЕШНИЙ — скроллится сам, центрирует по горизонтали */}
+      {/* 🎯 ВНЕШНИЙ — data-lenis-prevent */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -48,7 +51,6 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
         onClick={onClose}
         data-lenis-prevent
       >
-        {/* 🎯 ВНУТРЕННИЙ — центрирование по вертикали + отступы */}
         <div className="flex min-h-full items-center justify-center p-4">
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -57,6 +59,7 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-yellow-400/20 bg-gradient-to-b from-[#1a1620] to-[#0f0d14]"
+            data-lenis-prevent
           >
             <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-yellow-400/30 blur-[100px]" />
 
@@ -67,7 +70,6 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
               <X className="h-4 w-4" />
             </button>
 
-            {/* Заголовок */}
             <div className="relative border-b border-white/5 p-6 pt-8 text-center">
               <motion.div
                 animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }}
@@ -90,7 +92,6 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
               </p>
             </div>
 
-            {/* Контент */}
             <div className="space-y-4 p-5">
               <div className="relative overflow-hidden rounded-2xl border-2 border-yellow-400/40 bg-gradient-to-br from-yellow-400/10 via-orange-400/5 to-transparent p-5">
                 <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-yellow-400 px-2 py-0.5 text-[10px] font-bold text-black shadow-lg">
