@@ -36,12 +36,28 @@ async function ArtistContent({ username }: { username: string }) {
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
-  // Заказы (только для client / both)
+  // Заказы
   const { data: orders } = await supabase
     .from('orders')
     .select('id, title, image_url, budget, budget_type, budget_to, category, deadline_days, tags, status, responses_count, created_at')
     .eq('client_id', profile.id)
     .order('created_at', { ascending: false });
+
+  // Отзывы
+  const { data: reviews } = await supabase
+    .from('reviews')
+    .select(`
+      id, rating, comment, created_at,
+      author:profiles!reviews_author_id_fkey (id, username, display_name, avatar_url, is_sponsor)
+    `)
+    .eq('target_id', profile.id)
+    .order('created_at', { ascending: false });
+
+  // Средний рейтинг
+  const avgRating =
+    reviews && reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0;
 
   // Статистика
   const totalLikes = (artworks || []).reduce(
@@ -85,6 +101,14 @@ async function ArtistContent({ username }: { username: string }) {
         responses_count: o.responses_count || 0,
         created_at: o.created_at,
       }))}
+      reviews={(reviews || []).map((r: any) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        created_at: r.created_at,
+        author: Array.isArray(r.author) ? r.author[0] : r.author,
+      }))}
+      avgRating={avgRating}
       totalLikes={totalLikes}
     />
   );

@@ -159,7 +159,7 @@ function Stars() {
 }
 
 // ============================================
-// ЛУНА — ПЛАВНАЯ + ГРАНИЦЫ «ЧАСТИЧНО ВИДНА»
+// ЛУНА — ПЛАВНАЯ + ГРАНИЦЫ
 // ============================================
 function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) {
   const moonRef = useRef<HTMLDivElement>(null);
@@ -171,17 +171,10 @@ function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) 
 
     const animate = () => {
       if (moonRef.current) {
-        // 🎯 ОЧЕНЬ ПЛАВНОЕ сглаживание velocity
         lastVelocityRef.current +=
           (velocityRef.current - lastVelocityRef.current) * 0.06;
-
-        // 🎯 МЕДЛЕННОЕ движение: множитель 0.15 (было 0.5)
         positionRef.current -= lastVelocityRef.current * 0.15;
 
-        // 🎯 ГРАНИЦЫ с размером луны 80vw:
-        // Луна стоит на top-[72%]. Чтобы часть луны ВСЕГДА была видна:
-        // - ВВЕРХ можно уехать максимум на (80vw - 20vw) = 60vw (оставляем 20vw видимой)
-        // - ВНИЗ можно уехать максимум на 20vw (чтобы верхняя часть луны осталась видна)
         const vw = window.innerWidth / 100;
         const maxUp = -60 * vw;
         const maxDown = 20 * vw;
@@ -257,7 +250,7 @@ function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) 
             className="select-none text-center font-bold leading-none tracking-tighter"
             style={{
               fontFamily: 'var(--font-unbounded), system-ui, sans-serif',
-              fontSize: 'clamp(5rem, 14vw, 18rem)',
+              fontSize: 'clamp(4rem, 14vw, 18rem)',
               background:
                 'linear-gradient(180deg, rgba(255,255,255,0.75) 0%, rgba(183,148,246,0.5) 40%, rgba(108,99,255,0.2) 100%)',
               WebkitBackgroundClip: 'text',
@@ -274,8 +267,9 @@ function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) 
     </motion.div>
   );
 }
+
 // ============================================
-// КАРТОЧКА — ДВИЖЕТСЯ САМА + СКРОЛЛ УСКОРЯЕТ
+// КАРТОЧКА — ДВИЖЕТСЯ (ТОЛЬКО DESKTOP)
 // ============================================
 function FlyingCard({
   artwork,
@@ -288,7 +282,7 @@ function FlyingCard({
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const autoScrollRef = useRef(0); // 🎯 самостоятельное движение
+  const autoScrollRef = useRef(0);
 
   const config = [
     { y: 22, size: 280, offset: 0, z: 8, speed: 0.15 },
@@ -307,10 +301,8 @@ function FlyingCard({
 
     const animate = () => {
       if (cardRef.current) {
-        // 🎯 САМОСТОЯТЕЛЬНОЕ движение: каждый кадр карточка едет сама
         autoScrollRef.current += c.speed;
 
-        // 🎯 + движение от скролла
         const raw = c.offset - autoScrollRef.current - scrollRef.current * 0.5;
         const wrappedX = ((raw % RANGE) + RANGE) % RANGE;
 
@@ -344,7 +336,7 @@ function FlyingCard({
   return (
     <div
       ref={cardRef}
-      className="absolute"
+      className="absolute hidden md:block"
       style={{
         left: '-30%',
         top: `${c.y}%`,
@@ -409,6 +401,7 @@ function FlyingCard({
     </div>
   );
 }
+
 // ============================================
 // ГЛАВНЫЙ КОМПОНЕНТ
 // ============================================
@@ -421,15 +414,27 @@ export function HeroGalaxy({
 }) {
   const scrollRef = useRef(0);
   const velocityRef = useRef(0);
+  const [isMobile, setIsMobile] = useState(false);
 
+  // 🎯 Определяем мобилу
   useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // Скролл мышкой (только на десктопе)
+  useEffect(() => {
+    if (isMobile) return;
+
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       velocityRef.current += e.deltaY * 0.4;
     };
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => window.removeEventListener('wheel', handleWheel);
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     let animationId: number;
@@ -446,31 +451,33 @@ export function HeroGalaxy({
     <div className="relative h-screen w-full overflow-hidden bg-[#0a0a0f]">
       <Stars />
 
+      {/* ЛОГО */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="absolute left-1/2 top-10 z-30 flex -translate-x-1/2 items-center gap-3"
+        className="absolute left-1/2 top-6 z-30 flex -translate-x-1/2 items-center gap-2 md:top-10 md:gap-3"
       >
         <Image
           src="/logo.png"
           alt="Artix"
-          width={48}
-          height={48}
+          width={isMobile ? 32 : 48}
+          height={isMobile ? 32 : 48}
           className="object-contain drop-shadow-[0_0_16px_rgba(108,99,255,0.8)]"
         />
-        <span className="text-3xl font-bold tracking-tight">
+        <span className="text-xl font-bold tracking-tight md:text-3xl">
           <span className="gradient-text">Artix</span>
         </span>
       </motion.div>
 
+      {/* Волнистая линия */}
       <motion.div
         initial={{ opacity: 0, scaleX: 0 }}
         animate={{ opacity: 1, scaleX: 1 }}
         transition={{ duration: 1, delay: 0.5 }}
-        className="absolute left-1/2 top-24 z-20 -translate-x-1/2"
+        className="absolute left-1/2 top-16 z-20 -translate-x-1/2 md:top-24"
       >
-        <svg width="260" height="12" viewBox="0 0 260 12">
+        <svg width={isMobile ? 180 : 260} height="12" viewBox="0 0 260 12">
           <path
             d="M2 6 Q 35 1 65 6 T 130 6 T 195 6 T 258 6"
             stroke="url(#wave-gradient)"
@@ -487,44 +494,47 @@ export function HeroGalaxy({
         </svg>
       </motion.div>
 
-      <div className="absolute inset-0 z-[5]">
+      {/* Карточки — только desktop */}
+      <div className="absolute inset-0 z-[5] hidden md:block">
         {heroArtworks.slice(0, 6).map((art, i) => (
           <FlyingCard key={art.id} artwork={art} index={i} scrollRef={scrollRef} />
         ))}
       </div>
 
+      {/* Луна */}
       <Moon velocityRef={velocityRef} />
 
-      <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center pb-64">
+      {/* Центральный текст */}
+      <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center px-4 pb-32 md:pb-64">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={isVisible ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1, delay: 0.3 }}
-          className="mb-6 flex items-center gap-4"
+          className="mb-4 flex items-center gap-2 md:mb-6 md:gap-4"
         >
           <motion.span
             initial={{ scaleX: 0 }}
             animate={isVisible ? { scaleX: 1 } : {}}
             transition={{ duration: 1, delay: 0.3 }}
-            className="h-px w-16 origin-right bg-gradient-to-l from-[#B794F6]/60 to-transparent"
+            className="h-px w-8 origin-right bg-gradient-to-l from-[#B794F6]/60 to-transparent md:w-16"
           />
-          <span className="font-serif text-xs uppercase tracking-[0.3em] text-[#B794F6]/80 md:text-sm">
+          <span className="font-serif text-[10px] uppercase tracking-[0.2em] text-[#B794F6]/80 md:text-sm md:tracking-[0.3em]">
             добро пожаловать в
           </span>
           <motion.span
             initial={{ scaleX: 0 }}
             animate={isVisible ? { scaleX: 1 } : {}}
             transition={{ duration: 1, delay: 0.3 }}
-            className="h-px w-16 origin-left bg-gradient-to-r from-[#B794F6]/60 to-transparent"
+            className="h-px w-8 origin-left bg-gradient-to-r from-[#B794F6]/60 to-transparent md:w-16"
           />
         </motion.div>
 
-        <div className="relative">
+        <div className="relative w-full">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-24 w-96 rounded-full bg-[#6C63FF]/20 blur-[80px] md:h-32" />
+            <div className="h-16 w-64 rounded-full bg-[#6C63FF]/20 blur-[60px] md:h-24 md:w-96 md:blur-[80px]" />
           </div>
           <h2
-            className="gradient-text relative text-center text-5xl font-bold leading-none md:text-6xl lg:text-7xl"
+            className="gradient-text relative text-center text-4xl font-bold leading-none sm:text-5xl md:text-6xl lg:text-7xl"
             style={{
               fontFamily: 'var(--font-unbounded), system-ui, sans-serif',
               letterSpacing: '-0.03em',
@@ -543,18 +553,18 @@ export function HeroGalaxy({
           initial={{ opacity: 0 }}
           animate={isVisible ? { opacity: 1 } : {}}
           transition={{ duration: 1, delay: 2.4 }}
-          className="my-4 flex items-center gap-3"
+          className="my-3 flex items-center gap-2 md:my-4 md:gap-3"
         >
-          <span className="h-px w-8 bg-[#B794F6]/30" />
-          <span className="font-serif text-sm italic text-white/40 md:text-base">
+          <span className="h-px w-6 bg-[#B794F6]/30 md:w-8" />
+          <span className="font-serif text-xs italic text-white/40 md:text-base">
             где рождаются
           </span>
-          <span className="h-px w-8 bg-[#B794F6]/30" />
+          <span className="h-px w-6 bg-[#B794F6]/30 md:w-8" />
         </motion.div>
 
-        <div className="relative">
+        <div className="relative w-full">
           <h2
-            className="relative text-center text-5xl font-bold leading-none text-white md:text-6xl lg:text-7xl"
+            className="relative text-center text-4xl font-bold leading-none text-white sm:text-5xl md:text-6xl lg:text-7xl"
             style={{
               fontFamily: 'var(--font-unbounded), system-ui, sans-serif',
               letterSpacing: '-0.03em',
@@ -573,9 +583,9 @@ export function HeroGalaxy({
           initial={{ opacity: 0, y: 10 }}
           animate={isVisible ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 4.8 }}
-          className="mt-8 max-w-lg text-center"
+          className="mt-6 max-w-sm text-center md:mt-8 md:max-w-lg"
         >
-          <p className="font-serif text-sm italic leading-relaxed text-white/40 md:text-base">
+          <p className="font-serif text-xs italic leading-relaxed text-white/40 md:text-base">
             <AnimatedLetters
               text="Открой для себя художников со всей вселенной"
               delay={4.9}
@@ -584,17 +594,16 @@ export function HeroGalaxy({
           </p>
         </motion.div>
 
-        {/* 🎯 КНОПКИ — СТЕКЛЯННЫЕ ЧЁРНЫЕ */}
+        {/* Кнопки */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isVisible ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 5.8 }}
-          className="pointer-events-auto mt-10 flex flex-wrap justify-center gap-3"
+          className="pointer-events-auto mt-8 flex flex-col gap-3 sm:flex-row md:mt-10"
         >
-          {/* Смотреть галактику */}
           <a
             href="/feed"
-            className="group relative overflow-hidden rounded-full border border-white/10 bg-white px-8 py-4 text-sm font-semibold text-black shadow-2xl shadow-white/10 transition-all duration-500 hover:scale-105"
+            className="group relative overflow-hidden rounded-full border border-white/10 bg-white px-6 py-3 text-sm font-semibold text-black shadow-2xl shadow-white/10 transition-all duration-500 hover:scale-105 md:px-8 md:py-4"
           >
             <span className="relative z-10 transition-colors duration-500 group-hover:text-white">
               Смотреть галактику
@@ -602,15 +611,14 @@ export function HeroGalaxy({
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-[#6C63FF] to-[#B794F6] transition-transform duration-500 group-hover:translate-x-0" />
           </a>
 
-          {/* Присоединиться */}
           <a
             href="/auth/sign-up"
-            className="group relative overflow-hidden rounded-full border border-[#6C63FF]/30 bg-[#6C63FF]/10 px-8 py-4 text-sm font-semibold text-white backdrop-blur transition-all duration-500 hover:border-[#6C63FF]/60 hover:bg-[#6C63FF]/20"
+            className="group relative overflow-hidden rounded-full border border-[#6C63FF]/30 bg-[#6C63FF]/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition-all duration-500 hover:border-[#6C63FF]/60 hover:bg-[#6C63FF]/20 md:px-8 md:py-4"
           >
             <span className="relative z-10">Присоединиться</span>
           </a>
         </motion.div>
-        </div>
+      </div>
     </div>
   );
 }

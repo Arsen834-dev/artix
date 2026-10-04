@@ -21,7 +21,10 @@ import {
   Clock,
   ShoppingBag,
   Users,
+  MessageSquare,
 } from 'lucide-react';
+import { StartChatButton } from './start-chat-button';
+import { ReviewsList } from './reviews-list';
 
 type Profile = {
   id: string;
@@ -81,6 +84,20 @@ type Order = {
   created_at: string;
 };
 
+type Review = {
+  id: number;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  author: {
+    id: string;
+    username: string;
+    display_name: string;
+    avatar_url: string | null;
+    is_sponsor: boolean;
+  };
+};
+
 const CATEGORY_LABELS: Record<string, string> = {
   portrait: 'Портреты',
   fantasy: 'Фэнтези',
@@ -122,9 +139,6 @@ function formatDelivery(days: number): string {
   return `${days} дней`;
 }
 
-// ============================================
-// СОЦСЕТИ
-// ============================================
 function SocialLinks({ profile }: { profile: Profile }) {
   const links = [
     { url: profile.telegram_url, label: 'Telegram', icon: Send, color: 'hover:text-[#0088cc] hover:border-[#0088cc]/40' },
@@ -165,9 +179,6 @@ function SocialLinks({ profile }: { profile: Profile }) {
   );
 }
 
-// ============================================
-// КАРТОЧКА РАБОТЫ
-// ============================================
 function ArtworkCard({ artwork, index }: { artwork: Artwork; index: number }) {
   return (
     <motion.div
@@ -203,9 +214,6 @@ function ArtworkCard({ artwork, index }: { artwork: Artwork; index: number }) {
   );
 }
 
-// ============================================
-// КАРТОЧКА УСЛУГИ
-// ============================================
 function ServiceCard({ service, index }: { service: Service; index: number }) {
   return (
     <motion.div
@@ -253,9 +261,6 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
   );
 }
 
-// ============================================
-// КАРТОЧКА ЗАКАЗА
-// ============================================
 function OrderCard({ order, index }: { order: Order; index: number }) {
   const isOpen = order.status === 'open';
 
@@ -315,20 +320,21 @@ function OrderCard({ order, index }: { order: Order; index: number }) {
   );
 }
 
-// ============================================
-// ГЛАВНЫЙ КОМПОНЕНТ
-// ============================================
 export function ArtistPageContent({
   profile,
   artworks,
   services,
   orders,
+  reviews,
+  avgRating,
   totalLikes,
 }: {
   profile: Profile;
   artworks: Artwork[];
   services: Service[];
   orders: Order[];
+  reviews: Review[];
+  avgRating: number;
   totalLikes: number;
 }) {
   const joinDate = new Date(profile.created_at).toLocaleDateString('ru-RU', {
@@ -339,43 +345,26 @@ export function ArtistPageContent({
   const isArtist = profile.role === 'artist' || profile.role === 'both';
   const isClient = profile.role === 'client' || profile.role === 'both';
 
-  // 🎯 Собираем табы
   const tabs: Array<{
-    key: 'artworks' | 'services' | 'orders';
+    key: 'artworks' | 'services' | 'orders' | 'reviews';
     label: string;
     icon: any;
     count: number;
   }> = [];
 
   if (isArtist) {
-    tabs.push({
-      key: 'artworks',
-      label: 'Работы',
-      icon: ImageIcon,
-      count: artworks.length,
-    });
-    tabs.push({
-      key: 'services',
-      label: 'Услуги',
-      icon: Briefcase,
-      count: services.length,
-    });
+    tabs.push({ key: 'artworks', label: 'Работы', icon: ImageIcon, count: artworks.length });
+    tabs.push({ key: 'services', label: 'Услуги', icon: Briefcase, count: services.length });
   }
-
   if (isClient) {
-    tabs.push({
-      key: 'orders',
-      label: 'Заказы',
-      icon: ShoppingBag,
-      count: orders.length,
-    });
+    tabs.push({ key: 'orders', label: 'Заказы', icon: ShoppingBag, count: orders.length });
   }
+  tabs.push({ key: 'reviews', label: 'Отзывы', icon: MessageSquare, count: reviews.length });
 
   const [activeTab, setActiveTab] = useState(tabs[0]?.key || 'artworks');
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Назад */}
       <Link
         href="/feed"
         className="group mb-8 inline-flex items-center gap-2 text-sm text-white/60 transition hover:text-white"
@@ -386,12 +375,7 @@ export function ArtistPageContent({
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
         Назад в галактику
       </Link>
@@ -403,14 +387,9 @@ export function ArtistPageContent({
         transition={{ duration: 0.6 }}
         className="relative mb-8 overflow-hidden rounded-3xl border border-white/10 bg-[#16161f]/60 backdrop-blur-sm"
       >
-        {/* Обложка */}
         <div className="relative h-48 md:h-64">
           {profile.cover_url ? (
-            <img
-              src={profile.cover_url}
-              alt="Cover"
-              className="h-full w-full object-cover"
-            />
+            <img src={profile.cover_url} alt="Cover" className="h-full w-full object-cover" />
           ) : (
             <div className="h-full w-full bg-gradient-to-br from-[#6C63FF] via-[#B794F6] to-[#4FD1C5]" />
           )}
@@ -419,10 +398,8 @@ export function ArtistPageContent({
           <div className="pointer-events-none absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-[#4FD1C5]/20 blur-[100px]" />
         </div>
 
-        {/* Контент */}
         <div className="relative -mt-20 px-8 pb-8 md:-mt-24 md:px-12 md:pb-12">
           <div className="flex flex-col items-center gap-8 md:flex-row md:items-end">
-            {/* Аватар */}
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -448,7 +425,6 @@ export function ArtistPageContent({
               )}
             </motion.div>
 
-            {/* Информация */}
             <div className="flex-1 text-center md:pb-2 md:text-left">
               <motion.h1
                 initial={{ opacity: 0, y: 10 }}
@@ -465,9 +441,7 @@ export function ArtistPageContent({
                 transition={{ duration: 0.6, delay: 0.4 }}
                 className="mt-2 flex flex-wrap items-center justify-center gap-3 md:justify-start"
               >
-                <span className="text-lg text-white/40">
-                  @{profile.username}
-                </span>
+                <span className="text-lg text-white/40">@{profile.username}</span>
                 {isArtist && (
                   <span className="flex items-center gap-1 rounded-full bg-[#6C63FF]/20 px-3 py-1 text-xs font-medium text-[#B794F6]">
                     <Palette className="h-3 w-3" />
@@ -487,10 +461,39 @@ export function ArtistPageContent({
                   </span>
                 )}
               </motion.div>
+
+              {/* Рейтинг */}
+              {reviews.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="mt-3 flex items-center justify-center gap-2 md:justify-start"
+                >
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-4 w-4 ${
+                          star <= Math.round(avgRating)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-white/20'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm font-semibold text-white">
+                    {avgRating.toFixed(1)}
+                  </span>
+                  <span className="text-sm text-white/40">
+                    ({reviews.length}{' '}
+                    {reviews.length === 1 ? 'отзыв' : 'отзывов'})
+                  </span>
+                </motion.div>
+              )}
             </div>
           </div>
 
-          {/* Био + соцсети + статистика */}
           <div className="mt-8">
             {profile.bio && (
               <p className="mx-auto max-w-3xl text-center text-white/60 md:mx-0 md:text-left">
@@ -505,16 +508,12 @@ export function ArtistPageContent({
                 <>
                   <div className="flex items-center gap-2 text-white/70">
                     <ImageIcon className="h-4 w-4 text-[#B794F6]" />
-                    <span className="font-semibold text-white">
-                      {artworks.length}
-                    </span>
+                    <span className="font-semibold text-white">{artworks.length}</span>
                     <span className="text-sm">работ</span>
                   </div>
                   <div className="flex items-center gap-2 text-white/70">
                     <Briefcase className="h-4 w-4 text-[#B794F6]" />
-                    <span className="font-semibold text-white">
-                      {services.length}
-                    </span>
+                    <span className="font-semibold text-white">{services.length}</span>
                     <span className="text-sm">услуг</span>
                   </div>
                 </>
@@ -522,9 +521,7 @@ export function ArtistPageContent({
               {isClient && (
                 <div className="flex items-center gap-2 text-white/70">
                   <ShoppingBag className="h-4 w-4 text-[#4FD1C5]" />
-                  <span className="font-semibold text-white">
-                    {orders.length}
-                  </span>
+                  <span className="font-semibold text-white">{orders.length}</span>
                   <span className="text-sm">заказов</span>
                 </div>
               )}
@@ -539,7 +536,6 @@ export function ArtistPageContent({
               </div>
             </div>
 
-            {/* Цена + кнопка */}
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4 md:justify-start">
               {profile.price_range && (
                 <div>
@@ -551,63 +547,55 @@ export function ArtistPageContent({
                   </div>
                 </div>
               )}
-              <button className="group relative overflow-hidden rounded-full border border-white/10 bg-white px-6 py-3 text-sm font-semibold text-black transition-all duration-500 hover:scale-105">
-                <span className="relative z-10 flex items-center gap-2 transition-colors duration-500 group-hover:text-white">
-                  <MessageCircle className="h-4 w-4" />
-                  Написать
-                </span>
-                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-[#6C63FF] to-[#B794F6] transition-transform duration-500 group-hover:translate-x-0" />
-              </button>
+              <StartChatButton
+                targetUserId={profile.id}
+                className="group relative overflow-hidden rounded-full border border-white/10 bg-white px-6 py-3 text-sm font-semibold text-black transition-all duration-500 hover:scale-105"
+              >
+                Написать
+              </StartChatButton>
             </div>
           </div>
         </div>
       </motion.div>
 
       {/* ТАБЫ */}
-      {tabs.length > 1 && (
-        <div className="mb-8 flex justify-center md:justify-start">
-          <div className="glass inline-flex gap-1 overflow-x-auto rounded-full p-1 scrollbar-hide">
-            {tabs.map((t) => {
-              const Icon = t.icon;
-              const isActive = activeTab === t.key;
-              return (
-                <button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key)}
-                  className={`relative flex items-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
-                    isActive
-                      ? 'text-white'
-                      : 'text-white/50 hover:text-white/80'
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="artist-tab-pill"
-                      className="absolute inset-0 rounded-full bg-gradient-to-r from-[#6C63FF] to-[#B794F6] shadow-lg shadow-[#6C63FF]/30"
-                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  <span className="relative z-10 flex items-center gap-2">
-                    <Icon className="h-4 w-4" />
-                    {t.label}
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs ${
-                        isActive
-                          ? 'bg-white/20'
-                          : 'bg-white/5 text-white/40'
-                      }`}
-                    >
-                      {t.count}
-                    </span>
+      <div className="mb-8 flex justify-center md:justify-start">
+        <div className="glass scrollbar-hide inline-flex gap-1 overflow-x-auto rounded-full p-1">
+          {tabs.map((t) => {
+            const Icon = t.icon;
+            const isActive = activeTab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`relative flex items-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
+                  isActive ? 'text-white' : 'text-white/50 hover:text-white/80'
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="artist-tab-pill"
+                    className="absolute inset-0 rounded-full bg-gradient-to-r from-[#6C63FF] to-[#B794F6] shadow-lg shadow-[#6C63FF]/30"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  <Icon className="h-4 w-4" />
+                  {t.label}
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs ${
+                      isActive ? 'bg-white/20' : 'bg-white/5 text-white/40'
+                    }`}
+                  >
+                    {t.count}
                   </span>
-                </button>
-              );
-            })}
-          </div>
+                </span>
+              </button>
+            );
+          })}
         </div>
-      )}
+      </div>
 
-      {/* КОНТЕНТ ТАБА */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
@@ -616,15 +604,10 @@ export function ArtistPageContent({
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3 }}
         >
-          {/* РАБОТЫ */}
           {activeTab === 'artworks' && (
             <>
               {artworks.length === 0 ? (
-                <EmptyState
-                  icon={ImageIcon}
-                  title="Пока нет работ"
-                  subtitle="Художник ещё не загрузил работы"
-                />
+                <EmptyState icon={ImageIcon} title="Пока нет работ" subtitle="Художник ещё не загрузил работы" />
               ) : (
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                   {artworks.map((artwork, i) => (
@@ -635,15 +618,10 @@ export function ArtistPageContent({
             </>
           )}
 
-          {/* УСЛУГИ */}
           {activeTab === 'services' && (
             <>
               {services.length === 0 ? (
-                <EmptyState
-                  icon={Briefcase}
-                  title="Пока нет услуг"
-                  subtitle="Художник ещё не предложил услуги"
-                />
+                <EmptyState icon={Briefcase} title="Пока нет услуг" subtitle="Художник ещё не предложил услуги" />
               ) : (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {services.map((service, i) => (
@@ -654,15 +632,10 @@ export function ArtistPageContent({
             </>
           )}
 
-          {/* ЗАКАЗЫ */}
           {activeTab === 'orders' && (
             <>
               {orders.length === 0 ? (
-                <EmptyState
-                  icon={ShoppingBag}
-                  title="Пока нет заказов"
-                  subtitle="Заказчик ещё не создал заказы"
-                />
+                <EmptyState icon={ShoppingBag} title="Пока нет заказов" subtitle="Заказчик ещё не создал заказы" />
               ) : (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {orders.map((order, i) => (
@@ -672,15 +645,14 @@ export function ArtistPageContent({
               )}
             </>
           )}
+
+          {activeTab === 'reviews' && <ReviewsList reviews={reviews} />}
         </motion.div>
       </AnimatePresence>
     </div>
   );
 }
 
-// ============================================
-// ПУСТОЕ СОСТОЯНИЕ
-// ============================================
 function EmptyState({
   icon: Icon,
   title,

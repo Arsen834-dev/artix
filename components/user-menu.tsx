@@ -3,14 +3,24 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { User as UserIcon, Settings, LogOut, Upload } from 'lucide-react';
+import {
+  User as UserIcon,
+  Settings,
+  LogOut,
+  Upload,
+  Star,
+  Handshake,
+  MessageCircle
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SponsorModal } from './sponsor-modal';
 
 export function UserMenu() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showSponsor, setShowSponsor] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -24,7 +34,7 @@ export function UserMenu() {
         setUser(user);
         const { data: profile } = await supabase
           .from('profiles')
-          .select('username, display_name, avatar_url')
+          .select('username, display_name, avatar_url, is_sponsor')
           .eq('id', user.id)
           .single();
         setProfile(profile);
@@ -71,87 +81,128 @@ export function UserMenu() {
   }
 
   return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 transition hover:border-white/20"
-      >
-        {profile?.avatar_url ? (
-          <img
-            src={profile.avatar_url}
-            alt={profile.display_name}
-            className="h-7 w-7 rounded-full object-cover"
-          />
-        ) : (
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-xs font-bold text-white">
-            {profile?.display_name?.[0]?.toUpperCase() || '?'}
-          </div>
-        )}
-        <span className="hidden text-sm font-medium text-white/80 sm:block">
-          {profile?.display_name || 'Профиль'}
-        </span>
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setOpen(false)}
+    <>
+      <div className="relative">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 transition hover:border-white/20"
+        >
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt={profile.display_name}
+              className="h-7 w-7 rounded-full object-cover"
             />
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-white/10 bg-[#16161f]/95 backdrop-blur-xl"
-            >
-              <div className="border-b border-white/5 p-4">
-                <div className="font-semibold text-white">
-                  {profile?.display_name}
+          ) : (
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-xs font-bold text-white">
+              {profile?.display_name?.[0]?.toUpperCase() || '?'}
+            </div>
+          )}
+          <span className="hidden text-sm font-medium text-white/80 sm:block">
+            {profile?.display_name || 'Профиль'}
+          </span>
+          {profile?.is_sponsor && (
+            <Star className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />
+          )}
+        </button>
+
+        <AnimatePresence>
+          {open && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setOpen(false)}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-2xl border border-white/10 bg-[#16161f]/95 backdrop-blur-xl"
+              >
+                <div className="border-b border-white/5 p-4">
+                  <div className="flex items-center gap-2">
+                    <div className="font-semibold text-white">
+                      {profile?.display_name}
+                    </div>
+                    {profile?.is_sponsor && (
+                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    )}
+                  </div>
+                  <div className="text-xs text-white/40">
+                    @{profile?.username}
+                  </div>
                 </div>
-                <div className="text-xs text-white/40">
-                  @{profile?.username}
+                <div className="p-2">
+                  <Link
+                    href={`/artist/${profile?.username}`}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
+                  >
+                    <UserIcon className="h-4 w-4" />
+                    Мой профиль
+                  </Link>
+                  <Link
+                    href="/upload"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Опубликовать
+                  </Link>
+                  <Link
+                    href="/deals"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
+                  >
+                    <Handshake className="h-4 w-4" />
+                    Мои сделки
+                  </Link>
+                  <Link
+                    href="/messages"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Сообщения
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      setShowSponsor(true);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-yellow-400 transition hover:bg-yellow-400/10"
+                  >
+                    <Star className="h-4 w-4" />
+                    {profile?.is_sponsor
+                      ? 'Продлить спонсорство'
+                      : 'Стать спонсором'}
+                  </button>
+                  <Link
+                    href="/settings/profile"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Настройки
+                  </Link>
                 </div>
-              </div>
-              <div className="p-2">
-                <Link
-                  href={`/artist/${profile?.username}`}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
-                >
-                  <UserIcon className="h-4 w-4" />
-                  Мой профиль
-                </Link>
-                <Link
-                  href="/upload"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
-                >
-                  <Upload className="h-4 w-4" />
-                  Опубликовать
-                </Link>
-                <Link
-                  href="/settings/profile"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
-                >
-                  <Settings className="h-4 w-4" />
-                  Настройки
-                </Link>
-              </div>
-              <div className="border-t border-white/5 p-2">
-                <button
-                  onClick={handleLogout}
-                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-red-400 transition hover:bg-red-500/10"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Выйти
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
+                <div className="border-t border-white/5 p-2">
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-red-400 transition hover:bg-red-500/10"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Выйти
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Модалка спонсорства */}
+      {showSponsor && <SponsorModal onClose={() => setShowSponsor(false)} />}
+    </>
   );
 }

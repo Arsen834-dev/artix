@@ -3,50 +3,196 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Menu,
+  X,
+  Home,
+  Image,
+  Briefcase,
+  ShoppingBag,
+  Users,
+  Info,
+  MessageCircle,
+} from 'lucide-react';
 import { UserMenu } from './user-menu';
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Скрываем на главной и загрузке
   const isHome = pathname === '/';
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   if (isHome) return null;
 
+  const navItems = [
+    { href: '/feed', label: 'Работы', icon: Image },
+    { href: '/services', label: 'Услуги', icon: Briefcase },
+    { href: '/orders', label: 'Заказы', icon: ShoppingBag },
+    { href: '/artists', label: 'Художники', icon: Users },
+    { href: '/about', label: 'О проекте', icon: Info },
+  ];
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 py-4">
-      <div className="flex items-center justify-center">
-        <Link href="/" className="group flex items-center gap-2">
-          <div className="relative flex h-7 w-7 items-center justify-center transition-transform duration-500 group-hover:scale-110">
-            <Image
-              src="/logo.png"
-              alt="Artix"
-              width={28}
-              height={28}
-              className="object-contain drop-shadow-[0_0_8px_rgba(108,99,255,0.5)] transition-all duration-500 group-hover:drop-shadow-[0_0_16px_rgba(108,99,255,0.8)]"
-              priority
-            />
+    <>
+      <header
+        className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${
+          scrolled
+            ? 'border-b border-white/5 bg-[#0a0a0f]/80 py-3 backdrop-blur-xl'
+            : 'bg-transparent py-4'
+        }`}
+      >
+        <div className="container mx-auto flex items-center justify-between gap-4 px-4">
+          <Link href="/" className="group flex shrink-0 items-center gap-2">
+            <div className="relative flex h-8 w-8 items-center justify-center transition-transform duration-500 group-hover:scale-110">
+              <Image
+                src="/logo.png"
+                alt="Artix"
+                width={32}
+                height={32}
+                className="object-contain drop-shadow-[0_0_10px_rgba(108,99,255,0.5)]"
+                priority
+              />
+            </div>
+            <span className="text-lg font-bold tracking-tight">
+              <span className="gradient-text">Artix</span>
+            </span>
+          </Link>
+
+          <nav className="hidden items-center gap-1 lg:flex">
+            {navItems.map((item) => {
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + '/');
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
+                    isActive
+                      ? 'text-white'
+                      : 'text-white/50 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  {item.label}
+                  {isActive && (
+                    <motion.span
+                      layoutId="header-active"
+                      className="absolute inset-x-3 -bottom-0.5 h-px bg-gradient-to-r from-transparent via-[#B794F6] to-transparent"
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/messages"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition hover:border-white/20 hover:text-white"
+              aria-label="Сообщения"
+            >
+              <MessageCircle className="h-4 w-4" />
+            </Link>
+
+            <div className="hidden sm:block">
+              <UserMenu />
+            </div>
+
+            <button
+              onClick={() => setMobileOpen((v) => !v)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition hover:border-white/20 hover:text-white lg:hidden"
+              aria-label="Меню"
+            >
+              {mobileOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </button>
           </div>
-          <span className="text-base font-bold tracking-tight">
-            <span className="gradient-text">Artix</span>
-          </span>
-        </Link>
-      </div>
-        {/* ДЕЙСТВИЯ */}
-        <UserMenu />
-        <div className="flex items-center gap-2">
-          <Link
-            href="/auth/login"
-            className="hidden rounded-full border border-white/10 px-4 py-1.5 text-sm font-medium text-white/70 transition hover:border-white/20 hover:text-white sm:block"
-          >
-            Войти
-          </Link>
-          <Link
-            href="/auth/sign-up"
-            className="rounded-full bg-gradient-to-r from-[#6C63FF] to-[#B794F6] px-4 py-1.5 text-sm font-medium text-white shadow-lg shadow-[#6C63FF]/30 transition hover:shadow-xl hover:shadow-[#6C63FF]/50"
-          >
-            Начать
-          </Link>
         </div>
-    </header>
+      </header>
+
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileOpen(false)}
+              className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
+            />
+
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="fixed right-0 top-0 z-50 h-full w-72 border-l border-white/10 bg-[#0a0a0f]/95 backdrop-blur-2xl lg:hidden"
+            >
+              <div className="flex h-full flex-col p-6">
+                <div className="mb-8 flex items-center justify-between">
+                  <span className="text-lg font-bold">
+                    <span className="gradient-text">Artix</span>
+                  </span>
+                  <button
+                    onClick={() => setMobileOpen(false)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <nav className="flex-1 space-y-1">
+                  <Link
+                    href="/"
+                    className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-white/70 transition hover:bg-white/5 hover:text-white"
+                  >
+                    <Home className="h-4 w-4" />
+                    Главная
+                  </Link>
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                          isActive
+                            ? 'bg-[#6C63FF]/10 text-white'
+                            : 'text-white/70 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </nav>
+
+                <div className="mt-auto border-t border-white/5 pt-4">
+                  <UserMenu />
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

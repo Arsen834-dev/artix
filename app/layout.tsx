@@ -4,6 +4,7 @@ import "./globals.css";
 import { CosmicBackground } from "@/components/cosmic-background";
 import { CustomCursor } from "@/components/custom-cursor";
 import { SmoothScroll } from "@/components/smooth-scroll";
+import { PageTransition } from '@/components/page-transition';
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -42,7 +43,9 @@ export default function RootLayout({
         <CustomCursor />
         <CosmicBackground />
         <SmoothScroll>
-          <main className="relative z-10">{children}</main>
+        <main className="relative z-10">
+          <PageTransition>{children}</PageTransition>
+        </main>
         </SmoothScroll>
       </body>
     </html>
