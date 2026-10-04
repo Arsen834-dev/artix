@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { Trash2, Loader2, AlertTriangle, X } from 'lucide-react';
@@ -21,7 +20,6 @@ export function DeleteButton({
   className?: string;
   label?: string;
 }) {
-  const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +37,6 @@ export function DeleteButton({
 
       if (deleteError) throw deleteError;
 
-      // 🎯 Редирект
       window.location.href = redirectTo;
     } catch (err: any) {
       console.error(err);
@@ -54,14 +51,13 @@ export function DeleteButton({
         onClick={() => setShowConfirm(true)}
         className={
           className ||
-          'flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition hover:border-red-500/40 hover:bg-red-500/20'
+          'flex w-full items-center justify-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 transition hover:border-red-500/40 hover:bg-red-500/20'
         }
       >
         <Trash2 className="h-4 w-4" />
         {label}
       </button>
 
-      {/* 🎯 МОДАЛКА ПОДТВЕРЖДЕНИЯ */}
       <AnimatePresence>
         {showConfirm && (
           <motion.div
