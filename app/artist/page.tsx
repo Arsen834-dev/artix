@@ -74,18 +74,10 @@ async function ArtistsList() {
               )}
 
               <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                {(profile.role === 'artist' || profile.role === 'both') && (
-                  <span className="flex items-center gap-1 rounded-full bg-[#6C63FF]/20 px-3 py-1 text-xs font-medium text-[#B794F6]">
-                    <Palette className="h-3 w-3" />
-                    Художник
-                  </span>
-                )}
-                {(profile.role === 'client' || profile.role === 'both') && (
-                  <span className="flex items-center gap-1 rounded-full bg-[#4FD1C5]/20 px-3 py-1 text-xs font-medium text-[#4FD1C5]">
-                    <ShoppingBag className="h-3 w-3" />
-                    Заказчик
-                  </span>
-                )}
+                <span className="flex items-center gap-1 rounded-full bg-[#6C63FF]/20 px-3 py-1 text-xs font-medium text-[#B794F6]">
+                  <Palette className="h-3 w-3" />
+                  Художник
+                </span>
               </div>
             </div>
           </div>
