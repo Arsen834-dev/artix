@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import NextImage from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,7 +9,7 @@ import {
   Menu,
   X,
   Home,
-  Image,
+  Image as ImageIcon, // 🎯 переименовали
   Briefcase,
   ShoppingBag,
   Users,
@@ -38,7 +38,7 @@ export function SiteHeader() {
   if (isHome) return null;
 
   const navItems = [
-    { href: '/feed', label: 'Работы', icon: Image },
+    { href: '/feed', label: 'Работы', icon: ImageIcon }, // 🎯 используем ImageIcon
     { href: '/services', label: 'Услуги', icon: Briefcase },
     { href: '/orders', label: 'Заказы', icon: ShoppingBag },
     { href: '/artists', label: 'Художники', icon: Users },
@@ -55,9 +55,10 @@ export function SiteHeader() {
         }`}
       >
         <div className="container mx-auto flex items-center justify-between gap-4 px-4">
+          {/* ЛОГО */}
           <Link href="/" className="group flex shrink-0 items-center gap-2">
             <div className="relative flex h-8 w-8 items-center justify-center transition-transform duration-500 group-hover:scale-110">
-              <Image
+              <NextImage
                 src="/logo.png"
                 alt="Artix"
                 width={32}
@@ -71,6 +72,7 @@ export function SiteHeader() {
             </span>
           </Link>
 
+          {/* НАВИГАЦИЯ — DESKTOP */}
           <nav className="hidden items-center gap-1 lg:flex">
             {navItems.map((item) => {
               const isActive =
@@ -98,7 +100,9 @@ export function SiteHeader() {
             })}
           </nav>
 
+          {/* ДЕЙСТВИЯ */}
           <div className="flex items-center gap-2">
+            {/* Иконка чата */}
             <Link
               href="/messages"
               className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition hover:border-white/20 hover:text-white"
@@ -107,10 +111,12 @@ export function SiteHeader() {
               <MessageCircle className="h-4 w-4" />
             </Link>
 
+            {/* UserMenu — только desktop */}
             <div className="hidden sm:block">
               <UserMenu />
             </div>
 
+            {/* Кнопка мобильного меню — только mobile */}
             <button
               onClick={() => setMobileOpen((v) => !v)}
               className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition hover:border-white/20 hover:text-white lg:hidden"
@@ -126,6 +132,7 @@ export function SiteHeader() {
         </div>
       </header>
 
+      {/* МОБИЛЬНОЕ МЕНЮ */}
       <AnimatePresence>
         {mobileOpen && (
           <>
