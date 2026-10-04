@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -22,6 +22,16 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
   const cardNumber = '2202 2088 7480 3472';
   const discordUsername = 'fl4wer834';
 
+  // 🎯 Блокируем скролл body при открытии
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(cardNumber.replace(/\s/g, ''));
     setCopied(true);
@@ -30,16 +40,15 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
 
   return (
     <AnimatePresence>
-      {/* 🎯 ВНЕШНИЙ — фиксированный, скроллится сам */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90 backdrop-blur-md"
         onClick={onClose}
+        data-lenis-prevent
       >
-        {/* 🎯 ВНУТРЕННИЙ — центрирование через flex */}
-        <div className="flex min-h-full items-start justify-center p-4 py-8">
+        <div className="flex min-h-full items-center justify-center p-4">
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -48,10 +57,8 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-yellow-400/20 bg-gradient-to-b from-[#1a1620] to-[#0f0d14]"
           >
-            {/* Свечение */}
             <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-yellow-400/30 blur-[100px]" />
 
-            {/* Кнопка закрытия */}
             <button
               onClick={onClose}
               className="absolute right-3 top-3 z-30 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/60 backdrop-blur transition hover:bg-black/80 hover:text-white"
@@ -59,9 +66,7 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
               <X className="h-4 w-4" />
             </button>
 
-            {/* Контент — без overflow, потому что скролл снаружи */}
             <div>
-              {/* Заголовок */}
               <div className="relative border-b border-white/5 p-6 pt-8 text-center">
                 <motion.div
                   animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }}
@@ -84,9 +89,7 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
                 </p>
               </div>
 
-              {/* Контент */}
               <div className="space-y-4 p-5">
-                {/* Тариф */}
                 <div className="relative overflow-hidden rounded-2xl border-2 border-yellow-400/40 bg-gradient-to-br from-yellow-400/10 via-orange-400/5 to-transparent p-5">
                   <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-yellow-400 px-2 py-0.5 text-[10px] font-bold text-black shadow-lg">
                     <Zap className="h-3 w-3 fill-current" />
@@ -113,7 +116,6 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
                   </ul>
                 </div>
 
-                {/* Переключатель шагов */}
                 {step === 'info' && (
                   <button
                     onClick={() => setStep('payment')}
@@ -177,7 +179,7 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
                 )}
 
                 <p className="text-center text-[10px] text-white/30">
-                  Оплата — прямой перепровод. Мы не берём комиссию.
+                  Оплата — прямой перевод. Мы не берём комиссию.
                 </p>
               </div>
             </div>
