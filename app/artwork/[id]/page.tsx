@@ -1,22 +1,18 @@
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
-import { ArrowLeft, Heart, Star, MessageCircle, Eye, Calendar, Tag } from "lucide-react";
-import { ArtworkPageContent } from "@/components/artwork-page-content";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  portrait: "Портреты", fantasy: "Фэнтези", anime: "Аниме",
-  illustration: "Иллюстрации", "3d": "3D", pixel: "Пиксель-арт",
-  scifi: "Sci-Fi", concept: "Концепт-арт", sketch: "Скетчи",
-  nature: "Природа", architecture: "Архитектура", other: "Другое",
-};
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { createClient } from '@/lib/supabase/server';
+import { ArtworkPageContent } from '@/components/artwork-page-content';
 
 async function ArtworkContent({ id }: { id: string }) {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Работа
   const { data: artwork, error } = await supabase
-    .from("artworks")
+    .from('artworks')
     .select(`
       id, title, description, image_url, price, likes_count, views_count,
       category, tags, created_at,
@@ -24,24 +20,38 @@ async function ArtworkContent({ id }: { id: string }) {
         id, username, display_name, avatar_url, bio, is_sponsor, price_range
       )
     `)
-    .eq("id", id)
+    .eq('id', id)
     .single();
 
   if (error || !artwork) {
     notFound();
   }
 
-  const artist = Array.isArray(artwork.artist) ? artwork.artist[0] : artwork.artist;
+  const artist = Array.isArray(artwork.artist)
+    ? artwork.artist[0]
+    : artwork.artist;
 
-  // Похожие работы (та же категория, кроме текущей)
+  // 🎯 Проверяем лайк
+  let isLiked = false;
+  if (user) {
+    const { data: like } = await supabase
+      .from('likes')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('artwork_id', id)
+      .maybeSingle();
+    isLiked = !!like;
+  }
+
+  // Похожие
   const { data: similar } = await supabase
-    .from("artworks")
+    .from('artworks')
     .select(`
       id, title, image_url, price, likes_count, category,
       artist:profiles!artworks_artist_id_fkey (username, display_name, avatar_url, is_sponsor)
     `)
-    .eq("category", artwork.category)
-    .neq("id", artwork.id)
+    .eq('category', artwork.category)
+    .neq('id', artwork.id)
     .limit(4);
 
   return (
@@ -49,6 +59,7 @@ async function ArtworkContent({ id }: { id: string }) {
       artwork={{
         ...artwork,
         artist,
+        is_liked: isLiked,
       }}
       similar={(similar || []).map((item: any) => ({
         id: item.id,
@@ -65,7 +76,7 @@ async function ArtworkContent({ id }: { id: string }) {
 
 function ArtworkSkeleton() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pt-24">
       <div className="h-8 w-32 animate-pulse rounded bg-white/5" />
       <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-3">
         <div className="aspect-[4/5] w-full animate-pulse rounded-3xl bg-white/5 lg:col-span-2" />

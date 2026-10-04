@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Star, Palette } from 'lucide-react';
+import { Star, Palette, ShoppingBag } from 'lucide-react';
 
 async function ArtistsList() {
   const supabase = await createClient();
@@ -21,8 +21,12 @@ async function ArtistsList() {
 
   if (profiles.length === 0) {
     return (
-      <div className="py-20 text-center text-white/60">
-        Пока нет художников 😢
+      <div className="rounded-3xl border border-white/5 bg-[#16161f]/40 p-16 text-center">
+        <Palette className="mx-auto mb-4 h-12 w-12 text-white/20" />
+        <p className="text-lg text-white/60">Пока нет художников</p>
+        <p className="mt-2 text-sm text-white/40">
+          Стань первым, кто присоединится!
+        </p>
       </div>
     );
   }
@@ -69,11 +73,19 @@ async function ArtistsList() {
                 </p>
               )}
 
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <span className="flex items-center gap-1 rounded-full bg-[#6C63FF]/20 px-3 py-1 text-xs font-medium text-[#B794F6]">
-                  <Palette className="h-3 w-3" />
-                  Художник
-                </span>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                {(profile.role === 'artist' || profile.role === 'both') && (
+                  <span className="flex items-center gap-1 rounded-full bg-[#6C63FF]/20 px-3 py-1 text-xs font-medium text-[#B794F6]">
+                    <Palette className="h-3 w-3" />
+                    Художник
+                  </span>
+                )}
+                {(profile.role === 'client' || profile.role === 'both') && (
+                  <span className="flex items-center gap-1 rounded-full bg-[#4FD1C5]/20 px-3 py-1 text-xs font-medium text-[#4FD1C5]">
+                    <ShoppingBag className="h-3 w-3" />
+                    Заказчик
+                  </span>
+                )}
               </div>
             </div>
           </div>

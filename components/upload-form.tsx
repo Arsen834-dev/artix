@@ -45,12 +45,11 @@ export function UploadForm({
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 🎯 Определяем, какие табы показывать
+  // Какие табы показывать
   const canPostArtwork = role === 'artist' || role === 'both';
   const canPostService = role === 'artist' || role === 'both';
   const canPostOrder = role === 'client' || role === 'both';
 
-  // 🎯 Дефолтный таб
   const defaultTab: Tab = canPostArtwork
     ? 'artwork'
     : canPostService
@@ -67,6 +66,8 @@ export function UploadForm({
   const [category, setCategory] = useState('fantasy');
   const [tags, setTags] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+
+  // 🎯 Работа — БЕЗ цены (убрано)
 
   // Услуга
   const [servicePrice, setServicePrice] = useState('');
@@ -145,7 +146,7 @@ export function UploadForm({
     try {
       let publicUrl: string | null = null;
 
-      // Загружаем картинку (если есть)
+      // Загружаем картинку
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${userId}/${Date.now()}.${fileExt}`;
@@ -174,10 +175,9 @@ export function UploadForm({
         .map((t) => t.trim())
         .filter((t) => t.length > 0);
 
-      let insertedId: number | null = null;
       let redirectPath = '';
 
-      // 🎯 ARTWORK
+      // 🎯 ARTWORK — БЕЗ ЦЕНЫ
       if (tab === 'artwork') {
         const { data, error: insertError } = await supabase
           .from('artworks')
@@ -191,8 +191,8 @@ export function UploadForm({
           })
           .select('id')
           .single();
+
         if (insertError) throw insertError;
-        insertedId = data.id;
         redirectPath = `/artwork/${data.id}`;
       }
 
@@ -223,7 +223,6 @@ export function UploadForm({
           .single();
 
         if (insertError) throw insertError;
-        insertedId = data.id;
         redirectPath = `/service/${data.id}`;
       }
 
@@ -253,7 +252,6 @@ export function UploadForm({
           .single();
 
         if (insertError) throw insertError;
-        insertedId = data.id;
         redirectPath = `/order/${data.id}`;
       }
 
@@ -310,16 +308,11 @@ export function UploadForm({
     );
   }
 
-  // Табы
   const tabs = [
     canPostArtwork && { key: 'artwork', label: 'Работа', icon: Palette },
     canPostService && { key: 'service', label: 'Услуга', icon: Briefcase },
     canPostOrder && { key: 'order', label: 'Заказ', icon: ShoppingBag },
-  ].filter(Boolean) as Array<{
-    key: Tab;
-    label: string;
-    icon: any;
-  }>;
+  ].filter(Boolean) as Array<{ key: Tab; label: string; icon: any }>;
 
   return (
     <motion.div
@@ -362,14 +355,20 @@ export function UploadForm({
                     setError(null);
                   }}
                   className={`relative flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-300 ${
-                    isActive ? 'text-white' : 'text-white/50 hover:text-white/80'
+                    isActive
+                      ? 'text-white'
+                      : 'text-white/50 hover:text-white/80'
                   }`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="tab-pill"
                       className="absolute inset-0 rounded-full bg-gradient-to-r from-[#6C63FF] to-[#B794F6] shadow-lg shadow-[#6C63FF]/30"
-                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 400,
+                        damping: 30,
+                      }}
                     />
                   )}
                   <span className="relative z-10 flex items-center gap-2">
@@ -539,6 +538,9 @@ export function UploadForm({
           </select>
         </div>
 
+        {/* 🎯 ARTWORK — БЕЗ ЦЕНЫ (блок удалён) */}
+
+        {/* SERVICE — цена + срок */}
         {tab === 'service' && (
           <>
             <div>
@@ -573,7 +575,9 @@ export function UploadForm({
                   htmlFor="servicePrice"
                   className="mb-3 block text-sm font-medium text-white/70"
                 >
-                  {servicePriceType === 'range' ? 'Цена от (₽) *' : 'Цена (₽) *'}
+                  {servicePriceType === 'range'
+                    ? 'Цена от (₽) *'
+                    : 'Цена (₽) *'}
                 </label>
                 <input
                   id="servicePrice"
@@ -630,6 +634,7 @@ export function UploadForm({
           </>
         )}
 
+        {/* ORDER — бюджет + срок */}
         {tab === 'order' && (
           <>
             <div>

@@ -19,6 +19,7 @@ import {
   DollarSign,
   Gamepad2,
   User,
+  ShoppingBag,
 } from 'lucide-react';
 
 type Profile = {
@@ -62,6 +63,7 @@ export function ProfileEditForm({
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [bio, setBio] = useState(profile.bio || '');
   const [priceRange, setPriceRange] = useState(profile.price_range || '');
+  const [role, setRole] = useState(profile.role); // 🎯 НОВОЕ
 
   const [telegramUrl, setTelegramUrl] = useState(profile.telegram_url || '');
   const [instagramUrl, setInstagramUrl] = useState(profile.instagram_url || '');
@@ -84,13 +86,10 @@ export function ProfileEditForm({
 
   const supabase = createClient();
 
-  // 🎯 Выбор файла → открыть модалку кропа
   const handleAvatarSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setError(null);
-
     if (!file.type.startsWith('image/')) {
       setError('Только картинки');
       return;
@@ -99,26 +98,18 @@ export function ProfileEditForm({
       setError('Максимум 10MB');
       return;
     }
-
     const reader = new FileReader();
     reader.onload = (e) => {
-      setCropState({
-        type: 'avatar',
-        image: e.target?.result as string,
-      });
+      setCropState({ type: 'avatar', image: e.target?.result as string });
     };
     reader.readAsDataURL(file);
-
-    // Сбрасываем input
     if (avatarInputRef.current) avatarInputRef.current.value = '';
   };
 
   const handleCoverSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setError(null);
-
     if (!file.type.startsWith('image/')) {
       setError('Только картинки');
       return;
@@ -127,23 +118,16 @@ export function ProfileEditForm({
       setError('Максимум 15MB');
       return;
     }
-
     const reader = new FileReader();
     reader.onload = (e) => {
-      setCropState({
-        type: 'cover',
-        image: e.target?.result as string,
-      });
+      setCropState({ type: 'cover', image: e.target?.result as string });
     };
     reader.readAsDataURL(file);
-
     if (coverInputRef.current) coverInputRef.current.value = '';
   };
 
-  // 🎯 После кропа — загрузка в Supabase
   const handleCropComplete = async (croppedBlob: Blob) => {
     if (!cropState) return;
-
     const isAvatar = cropState.type === 'avatar';
     if (isAvatar) setIsUploadingAvatar(true);
     else setIsUploadingCover(true);
@@ -177,7 +161,6 @@ export function ProfileEditForm({
     }
   };
 
-  // 🎯 Сохранение профиля
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -193,6 +176,7 @@ export function ProfileEditForm({
           avatar_url: avatarUrl,
           cover_url: coverUrl,
           price_range: priceRange.trim() || null,
+          role: role, // 🎯 НОВОЕ
           telegram_url: telegramUrl.trim() || null,
           instagram_url: instagramUrl.trim() || null,
           tiktok_url: tiktokUrl.trim() || null,
@@ -230,6 +214,12 @@ export function ProfileEditForm({
     { key: 'website', label: 'Личный сайт', placeholder: 'https://example.com', value: websiteUrl, setter: setWebsiteUrl, icon: Globe, color: '#B794F6' },
   ];
 
+  const roles = [
+    { key: 'artist', label: 'Художник', icon: Palette, color: '#B794F6' },
+    { key: 'client', label: 'Заказчик', icon: ShoppingBag, color: '#4FD1C5' },
+    { key: 'both', label: 'Оба', icon: User, color: '#F6AD55' },
+  ];
+
   return (
     <>
       <motion.div
@@ -238,7 +228,6 @@ export function ProfileEditForm({
         transition={{ duration: 0.6 }}
         className="mx-auto max-w-3xl"
       >
-        {/* Заголовок */}
         <div className="mb-10 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6C63FF] to-[#B794F6] shadow-2xl shadow-[#6C63FF]/40">
             <User className="h-8 w-8 text-white" />
@@ -246,9 +235,7 @@ export function ProfileEditForm({
           <h1 className="display-title text-4xl font-bold text-white md:text-5xl">
             Редактировать <span className="gradient-text">профиль</span>
           </h1>
-          <p className="mt-3 text-white/50">
-            Обнови аватар, био и соцсети
-          </p>
+          <p className="mt-3 text-white/50">Обнови аватар, био и соцсети</p>
         </div>
 
         <form onSubmit={handleSave} className="space-y-6">
@@ -256,11 +243,7 @@ export function ProfileEditForm({
           <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#16161f]/60 backdrop-blur-xl">
             <div className="relative h-40 md:h-56">
               {coverUrl ? (
-                <img
-                  src={coverUrl}
-                  alt="Cover"
-                  className="h-full w-full object-cover"
-                />
+                <img src={coverUrl} alt="Cover" className="h-full w-full object-cover" />
               ) : (
                 <div className="h-full w-full bg-gradient-to-br from-[#6C63FF] via-[#B794F6] to-[#4FD1C5]" />
               )}
@@ -324,9 +307,7 @@ export function ProfileEditForm({
                 </div>
 
                 <div className="text-center md:pb-2 md:text-left">
-                  <div className="text-sm text-white/40">
-                    @{profile.username}
-                  </div>
+                  <div className="text-sm text-white/40">@{profile.username}</div>
                   <div className="mt-1 text-xs text-white/30">
                     Username нельзя изменить
                   </div>
@@ -378,6 +359,41 @@ export function ProfileEditForm({
               />
               <div className="mt-1 text-right text-xs text-white/30">
                 {bio.length}/300
+              </div>
+            </div>
+
+            {/* 🎯 РОЛЬ */}
+            <div>
+              <label className="mb-3 block text-sm font-medium text-white/70">
+                Роль
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {roles.map((r) => {
+                  const Icon = r.icon;
+                  const isActive = role === r.key;
+                  return (
+                    <button
+                      key={r.key}
+                      type="button"
+                      onClick={() => setRole(r.key)}
+                      className={`flex flex-col items-center gap-2 rounded-2xl border p-4 transition ${
+                        isActive
+                          ? 'border-current bg-white/5'
+                          : 'border-white/10 bg-white/[0.03] text-white/50 hover:border-white/20 hover:bg-white/[0.05]'
+                      }`}
+                      style={{
+                        color: isActive ? r.color : undefined,
+                      }}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span className="text-sm font-medium">{r.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-2 text-xs text-white/40">
+                Художник — публикует работы и услуги. Заказчик — создаёт заказы.
+                Оба — может всё.
               </div>
             </div>
 
@@ -443,7 +459,7 @@ export function ProfileEditForm({
             </div>
           </div>
 
-          {/* ОШИБКА */}
+          {/* ОШИБКА / УСПЕХ */}
           <AnimatePresence>
             {error && (
               <motion.div
@@ -455,10 +471,7 @@ export function ProfileEditForm({
                 {error}
               </motion.div>
             )}
-          </AnimatePresence>
 
-          {/* УСПЕХ */}
-          <AnimatePresence>
             {success && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -472,7 +485,6 @@ export function ProfileEditForm({
             )}
           </AnimatePresence>
 
-          {/* КНОПКА */}
           <button
             type="submit"
             disabled={isSaving || isUploadingAvatar || isUploadingCover}
@@ -496,16 +508,13 @@ export function ProfileEditForm({
         </form>
       </motion.div>
 
-      {/* МОДАЛКА КРОПА */}
       {cropState && (
         <ImageCropModal
           image={cropState.image}
           aspect={cropState.type === 'avatar' ? 1 : 4}
           shape={cropState.type === 'avatar' ? 'round' : 'rect'}
           title={
-            cropState.type === 'avatar'
-              ? 'Обрежь аватарку'
-              : 'Обрежь обложку'
+            cropState.type === 'avatar' ? 'Обрежь аватарку' : 'Обрежь обложку'
           }
           onCancel={() => setCropState(null)}
           onComplete={handleCropComplete}
