@@ -4,7 +4,8 @@ import "./globals.css";
 import { CosmicBackground } from "@/components/cosmic-background";
 import { CustomCursor } from "@/components/custom-cursor";
 import { SmoothScroll } from "@/components/smooth-scroll";
-import { PageTransition } from '@/components/page-transition';
+import { SiteHeader } from "@/components/site-header";
+import { PageTransition } from "@/components/page-transition";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -17,7 +18,6 @@ const inter = Inter({
   subsets: ["latin", "cyrillic"],
 });
 
-// 🎯 Новый шрифт для главных слов
 const unbounded = Unbounded({
   variable: "--font-unbounded",
   subsets: ["latin", "cyrillic"],
@@ -25,7 +25,7 @@ const unbounded = Unbounded({
 });
 
 export const metadata: Metadata = {
-  title: "Artix — космическая галерея художников",
+  title: "Artix — космическая биржа художников",
   description: "Платформа для художников и их заказчиков",
   icons: { icon: "/logo-64.png" },
 };
@@ -43,9 +43,10 @@ export default function RootLayout({
         <CustomCursor />
         <CosmicBackground />
         <SmoothScroll>
-        <main className="relative z-10">
-          <PageTransition>{children}</PageTransition>
-        </main>
+          <SiteHeader />
+          <main className="relative z-10">
+            <PageTransition>{children}</PageTransition>
+          </main>
         </SmoothScroll>
       </body>
     </html>

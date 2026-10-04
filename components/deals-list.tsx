@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Clock, Handshake, User, DollarSign } from 'lucide-react';
+import { Clock, Handshake, User } from 'lucide-react';
 
 type Deal = {
   id: number;
@@ -19,12 +19,12 @@ type Deal = {
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  pending: { label: 'Ожидает оплаты', color: 'yellow' },
-  paid: { label: 'Оплачено', color: 'blue' },
-  in_progress: { label: 'В работе', color: 'purple' },
-  completed: { label: 'Завершено', color: 'green' },
-  disputed: { label: 'Спор', color: 'red' },
-  cancelled: { label: 'Отменено', color: 'gray' },
+  pending: { label: 'Ожидает оплаты', color: 'text-yellow-400 bg-yellow-400/10' },
+  paid: { label: 'Оплачено', color: 'text-blue-400 bg-blue-400/10' },
+  in_progress: { label: 'В работе', color: 'text-purple-400 bg-purple-400/10' },
+  completed: { label: 'Завершено', color: 'text-green-400 bg-green-400/10' },
+  disputed: { label: 'Спор', color: 'text-red-400 bg-red-400/10' },
+  cancelled: { label: 'Отменено', color: 'text-gray-400 bg-gray-400/10' },
 };
 
 export function DealsList({
@@ -59,21 +59,19 @@ export function DealsList({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: i * 0.05 }}
           >
-            <Link href={`/deal/${deal.id}`}>
+            <Link href={`/deals/${deal.id}`}>
               <div className="group relative overflow-hidden rounded-3xl border border-white/5 bg-[#16161f]/60 p-6 backdrop-blur-sm transition hover:-translate-y-1 hover:border-[#6C63FF]/40 hover:shadow-2xl hover:shadow-[#6C63FF]/20">
-                {/* Статус */}
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-xs uppercase tracking-wider text-white/40">
                     #{deal.id}
                   </span>
                   <span
-                    className={`rounded-full bg-${status.color}-500/20 px-2.5 py-1 text-xs font-medium text-${status.color}-400`}
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.color}`}
                   >
                     {status.label}
                   </span>
                 </div>
 
-                {/* Название */}
                 <h3 className="display-title text-xl font-bold text-white transition group-hover:text-[#B794F6]">
                   {deal.title}
                 </h3>
@@ -84,7 +82,6 @@ export function DealsList({
                   </p>
                 )}
 
-                {/* Участник */}
                 <div className="mt-4 flex items-center gap-2">
                   <User className="h-4 w-4 text-white/30" />
                   <span className="text-xs text-white/40">
@@ -95,7 +92,6 @@ export function DealsList({
                   </span>
                 </div>
 
-                {/* Сумма */}
                 <div className="mt-4 flex items-end justify-between border-t border-white/5 pt-4">
                   <div>
                     <div className="text-xs text-white/40">

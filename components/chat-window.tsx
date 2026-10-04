@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { ArrowLeft, Send, Star, Loader2 } from 'lucide-react';
 
@@ -35,21 +35,14 @@ export function ChatWindow({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [text, setText] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [otherTyping, setOtherTyping] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // 🎯 Скролл вниз
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // 🎯 Realtime подписка
   useEffect(() => {
     const supabase = createClient();
 
@@ -78,14 +71,11 @@ export function ChatWindow({
     };
   }, [chatId]);
 
-  // 🎯 Отправка
   const handleSend = async () => {
     const trimmed = text.trim();
     if (!trimmed || isSending) return;
 
     setIsSending(true);
-
-    // Оптимистично добавляем
     const tempId = Date.now();
     const optimistic: Message = {
       id: tempId,
@@ -110,13 +100,11 @@ export function ChatWindow({
 
       if (error) throw error;
 
-      // Заменяем temp на реальный
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? (data as Message) : m))
       );
     } catch (err) {
       console.error(err);
-      // Удаляем оптимистичное
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setText(trimmed);
     } finally {
@@ -135,7 +123,7 @@ export function ChatWindow({
   return (
     <div className="flex h-screen flex-col bg-[#0a0a0f]">
       {/* HEADER */}
-      <div className="border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-xl">
+      <div className="border-b border-white/5 bg-[#0a0a0f]/80 pt-16 backdrop-blur-xl">
         <div className="container mx-auto flex items-center gap-3 px-4 py-3">
           <Link
             href="/messages"
@@ -168,9 +156,7 @@ export function ChatWindow({
                   <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                 )}
               </div>
-              <div className="text-xs text-white/40">
-                @{other.username}
-              </div>
+              <div className="text-xs text-white/40">@{other.username}</div>
             </div>
           </Link>
         </div>
@@ -192,7 +178,8 @@ export function ChatWindow({
           {messages.map((msg, i) => {
             const isMine = msg.sender_id === userId;
             const prevMsg = messages[i - 1];
-            const showAvatar = !isMine && (!prevMsg || prevMsg.sender_id !== msg.sender_id);
+            const showAvatar =
+              !isMine && (!prevMsg || prevMsg.sender_id !== msg.sender_id);
 
             return (
               <motion.div
@@ -200,9 +187,10 @@ export function ChatWindow({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className={`flex items-end gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}
+                className={`flex items-end gap-2 ${
+                  isMine ? 'justify-end' : 'justify-start'
+                }`}
               >
-                {/* Аватар собеседника */}
                 {!isMine && showAvatar && (
                   <div className="shrink-0">
                     {other.avatar_url ? (
@@ -220,7 +208,6 @@ export function ChatWindow({
                 )}
                 {!isMine && !showAvatar && <div className="w-7" />}
 
-                {/* Пузырь */}
                 <div
                   className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
                     isMine
@@ -260,9 +247,7 @@ export function ChatWindow({
               placeholder="Напиши сообщение..."
               rows={1}
               className="max-h-32 flex-1 resize-none bg-transparent px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none"
-              style={{
-                minHeight: '36px',
-              }}
+              style={{ minHeight: '36px' }}
             />
             <button
               onClick={handleSend}

@@ -94,7 +94,7 @@ export function DealPageContent({
   const supabase = createClient();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showReview, setShowReview] = useState(false); // ← ПЕРЕНЕСЛИ НАВЕРХ
+  const [showReview, setShowReview] = useState(false);
 
   const status = STATUS_LABELS[deal.status] || STATUS_LABELS.pending;
   const otherPerson = isClient ? deal.artist : deal.client;
@@ -185,7 +185,7 @@ export function DealPageContent({
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pt-24">
       <Link
         href="/deals"
         className="group mb-8 inline-flex items-center gap-2 text-sm text-white/60 transition hover:text-white"

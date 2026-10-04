@@ -61,7 +61,6 @@ export function ChatsList({ chats }: { chats: Chat[] }) {
           >
             <Link href={`/chat/${chat.id}`}>
               <div className="group flex items-center gap-4 rounded-2xl border border-white/5 bg-[#16161f]/40 p-4 backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-[#6C63FF]/40 hover:bg-[#16161f]/60">
-                {/* Аватар */}
                 <div className="relative shrink-0">
                   {chat.other.avatar_url ? (
                     <img
@@ -81,10 +80,9 @@ export function ChatsList({ chats }: { chats: Chat[] }) {
                   )}
                 </div>
 
-                {/* Инфо */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5 min-w-0">
+                    <div className="flex min-w-0 items-center gap-1.5">
                       <span className="truncate font-semibold text-white">
                         {chat.other.display_name}
                       </span>
