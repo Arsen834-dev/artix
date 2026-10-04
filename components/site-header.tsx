@@ -9,7 +9,7 @@ import {
   Menu,
   X,
   Home,
-  Image as ImageIcon, // 🎯 переименовали
+  Image as ImageIcon,
   Briefcase,
   ShoppingBag,
   Users,
@@ -38,7 +38,7 @@ export function SiteHeader() {
   if (isHome) return null;
 
   const navItems = [
-    { href: '/feed', label: 'Работы', icon: ImageIcon }, // 🎯 используем ImageIcon
+    { href: '/feed', label: 'Работы', icon: ImageIcon },
     { href: '/services', label: 'Услуги', icon: Briefcase },
     { href: '/orders', label: 'Заказы', icon: ShoppingBag },
     { href: '/artists', label: 'Художники', icon: Users },
@@ -48,10 +48,10 @@ export function SiteHeader() {
   return (
     <>
       <header
-        className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${
+        className={`fixed left-0 right-0 top-0 z-[60] transition-all duration-500 ${
           scrolled
-            ? 'border-b border-white/5 bg-[#0a0a0f]/80 py-3 backdrop-blur-xl'
-            : 'bg-transparent py-4'
+            ? 'border-b border-white/5 bg-[#0a0a0f]/95 py-3 backdrop-blur-xl'
+            : 'bg-[#0a0a0f]/70 py-4 backdrop-blur-md'
         }`}
       >
         <div className="container mx-auto flex items-center justify-between gap-4 px-4">
@@ -73,7 +73,7 @@ export function SiteHeader() {
           </Link>
 
           {/* НАВИГАЦИЯ — DESKTOP */}
-          <nav className="hidden items-center gap-1 lg:flex">
+          <nav className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => {
               const isActive =
                 pathname === item.href || pathname.startsWith(item.href + '/');
@@ -81,7 +81,7 @@ export function SiteHeader() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
+                  className={`relative rounded-full px-3 py-2 text-sm font-medium transition-all duration-300 lg:px-4 ${
                     isActive
                       ? 'text-white'
                       : 'text-white/50 hover:bg-white/5 hover:text-white'
@@ -119,7 +119,7 @@ export function SiteHeader() {
             {/* Кнопка мобильного меню — только mobile */}
             <button
               onClick={() => setMobileOpen((v) => !v)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition hover:border-white/20 hover:text-white lg:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition hover:border-white/20 hover:text-white md:hidden"
               aria-label="Меню"
             >
               {mobileOpen ? (
@@ -141,7 +141,7 @@ export function SiteHeader() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileOpen(false)}
-              className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm md:hidden"
             />
 
             <motion.div
@@ -149,7 +149,7 @@ export function SiteHeader() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed right-0 top-0 z-50 h-full w-72 border-l border-white/10 bg-[#0a0a0f]/95 backdrop-blur-2xl lg:hidden"
+              className="fixed right-0 top-0 z-[80] h-full w-72 border-l border-white/10 bg-[#0a0a0f]/95 backdrop-blur-2xl md:hidden"
             >
               <div className="flex h-full flex-col p-6">
                 <div className="mb-8 flex items-center justify-between">

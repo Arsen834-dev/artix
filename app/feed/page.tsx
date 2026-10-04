@@ -50,13 +50,10 @@ async function FeedContent({
   if (error) {
     console.error('Supabase error:', error);
     return (
-      <div className="py-20 text-center text-white/60">
-        Ошибка загрузки 😢
-      </div>
+      <div className="py-20 text-center text-white/60">Ошибка загрузки 😢</div>
     );
   }
 
-  // 🎯 Загружаем лайки текущего пользователя
   let userLikes: number[] = [];
   if (user && data) {
     const { data: likes } = await supabase
@@ -91,8 +88,8 @@ async function CategoryFilters({
   const activeCategory = params.category || 'all';
 
   return (
-    <div className="sticky top-16 z-40 border-b border-white/5 bg-[#0a0a0f]/60 backdrop-blur-xl">
-      <div className="container mx-auto px-4 py-4">
+    <div className="sticky top-[60px] z-40 border-b border-white/5 bg-[#0a0a0f]/90 backdrop-blur-xl md:top-[64px]">
+      <div className="container mx-auto px-4 py-3">
         <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto pb-1">
           {CATEGORIES.map((cat) => {
             const isActive = activeCategory === cat.slug;
@@ -102,7 +99,7 @@ async function CategoryFilters({
                 href={
                   cat.slug === 'all' ? '/feed' : `/feed?category=${cat.slug}`
                 }
-                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
+                className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-300 ${
                   isActive
                     ? 'bg-gradient-to-r from-[#6C63FF] to-[#B794F6] text-white shadow-lg shadow-[#6C63FF]/30'
                     : 'border border-white/5 bg-white/5 text-white/60 hover:border-[#6C63FF]/30 hover:bg-white/10 hover:text-white'
@@ -125,7 +122,7 @@ function FeedSkeleton() {
         <div
           key={i}
           className="mb-5 break-inside-avoid"
-          style={{ height: `${200 + Math.random() * 200}px` }}
+          style={{ height: `${200 + (i * 30) % 200}px` }}
         >
           <div className="h-full animate-pulse rounded-3xl bg-white/5" />
         </div>
@@ -136,13 +133,13 @@ function FeedSkeleton() {
 
 function FiltersSkeleton() {
   return (
-    <div className="sticky top-16 z-40 border-b border-white/5 bg-[#0a0a0f]/60 backdrop-blur-xl">
-      <div className="container mx-auto px-4 py-4">
+    <div className="sticky top-[60px] z-40 border-b border-white/5 bg-[#0a0a0f]/90 backdrop-blur-xl md:top-[64px]">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="h-9 w-24 animate-pulse rounded-full bg-white/5"
+              className="h-8 w-20 animate-pulse rounded-full bg-white/5"
             />
           ))}
         </div>
@@ -162,12 +159,12 @@ export default function FeedPage({
         <CategoryFilters searchParams={searchParams} />
       </Suspense>
 
-      <div className="container mx-auto px-4 pb-8 pt-12">
-        <h1 className="display-title text-5xl font-bold md:text-7xl">
+      <div className="container mx-auto px-4 pb-8 pt-8">
+        <h1 className="display-title text-4xl font-bold md:text-6xl">
           <span className="gradient-text">Галактика</span>{' '}
           <span className="text-white">искусств</span>
         </h1>
-        <p className="mt-3 max-w-2xl text-white/50">
+        <p className="mt-2 max-w-2xl text-sm text-white/50 md:text-base">
           Лучшие работы художников со всей вселенной
         </p>
       </div>

@@ -109,13 +109,6 @@ h1, h2, h3, h4, h5, h6 {
     cursor: none;
   }
 }
-/* Скрыть шапку во время загрузки */
-body[data-loading="true"] header {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-
 body[data-loading="false"] header {
   opacity: 1;
   pointer-events: auto;
@@ -137,4 +130,7 @@ body[data-page="home"] {
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+body:not([data-page="home"]) main {
+  padding-top: 4.5rem;
 }
