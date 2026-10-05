@@ -14,9 +14,7 @@ async function ChatContent({ id }: { id: string }) {
 
   const { data: chat, error } = await supabase
     .from('chats')
-    .select(`
-      id, user1_id, user2_id, created_at
-    `)
+    .select('id, user1_id, user2_id, created_at')
     .eq('id', id)
     .single();
 
@@ -35,10 +33,10 @@ async function ChatContent({ id }: { id: string }) {
 
   if (!otherProfile) notFound();
 
-  // Сообщения
+  // 🎯 Сообщения с новыми полями
   const { data: messages } = await supabase
     .from('messages')
-    .select('id, sender_id, text, created_at')
+    .select('id, sender_id, text, image_url, message_type, created_at')
     .eq('chat_id', chat.id)
     .order('created_at', { ascending: true });
 

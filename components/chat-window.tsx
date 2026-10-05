@@ -10,13 +10,17 @@ import {
   Star,
   Loader2,
   ChevronDown,
-  Paperclip,
+  Smile,
+  Image as ImageIcon,
+  X,
 } from 'lucide-react';
 
 type Message = {
   id: number;
   sender_id: string;
-  text: string;
+  text: string | null;
+  image_url: string | null;
+  message_type: string;
   created_at: string;
 };
 
@@ -27,6 +31,15 @@ type Profile = {
   avatar_url: string | null;
   is_sponsor: boolean;
 };
+
+// 🎯 Набор смайликов
+const EMOJIS = [
+  '😀', '😂', '🥰', '😎', '🤔', '😴', '🥳', '😢',
+  '😡', '🤯', '😱', '🤗', '🙃', '😇', '🤩', '😋',
+  '👍', '👎', '👏', '🙏', '💪', '✌️', '🤝', '👋',
+  '❤️', '🔥', '✨', '⭐', '💯', '🎉', '🎨', '🚀',
+  '🐱', '🐶', '🦊', '🐉', '🌙', '🌌', '🪐', '👽',
+];
 
 export function ChatWindow({
   chatId,
@@ -44,10 +57,15 @@ export function ChatWindow({
   const [isSending, setIsSending] = useState(false);
   const [otherTyping, setOtherTyping] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 🎯 Скролл вниз
@@ -57,17 +75,15 @@ export function ChatWindow({
     });
   };
 
-  // 🎯 Первый скролл — мгновенно
   useEffect(() => {
     scrollToBottom(false);
   }, []);
 
-  // 🎯 Новое сообщение — скролл
   useEffect(() => {
     scrollToBottom();
   }, [messages.length]);
 
-  // 🎯 Показываем кнопку «Вниз» если проскроллил вверх
+  // 🎯 Кнопка «Вниз» если проскроллил
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -82,7 +98,7 @@ export function ChatWindow({
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 🎯 Realtime — подписка на новые сообщения
+  // 🎯 Realtime — новые сообщения
   useEffect(() => {
     const supabase = createClient();
 
@@ -111,7 +127,7 @@ export function ChatWindow({
     };
   }, [chatId]);
 
-  // 🎯 Индикатор «печатает» — через Supabase Broadcast
+  // 🎯 Индикатор «печатает»
   useEffect(() => {
     const supabase = createClient();
 
@@ -143,7 +159,24 @@ export function ChatWindow({
     };
   }, [chatId, userId]);
 
-  // 🎯 Отправка сообщения
+  // 🎯 Закрыть эмодзи-пикер при клике вне
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(e.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () =>
+        document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showEmojiPicker]);
+
+  // 🎯 Отправка текста
   const handleSend = async () => {
     const trimmed = text.trim();
     if (!trimmed || isSending) return;
@@ -155,6 +188,8 @@ export function ChatWindow({
       id: tempId,
       sender_id: userId,
       text: trimmed,
+      image_url: null,
+      message_type: 'text',
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimistic]);
@@ -168,6 +203,7 @@ export function ChatWindow({
           chat_id: chatId,
           sender_id: userId,
           text: trimmed,
+          message_type: 'text',
         })
         .select()
         .single();
@@ -187,7 +223,79 @@ export function ChatWindow({
     }
   };
 
-  // 🎯 При вводе — broadcast «печатает»
+  // 🎯 Отправка картинки
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Только картинки');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Максимум 5MB');
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const supabase = createClient();
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${chatId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('chat-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('chat-images').getPublicUrl(fileName);
+
+      // 🎯 Отправляем сообщение с картинкой
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          chat_id: chatId,
+          sender_id: userId,
+          text: null,
+          image_url: publicUrl,
+          message_type: 'image',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setMessages((prev) => [...prev, data as Message]);
+    } catch (err: any) {
+      console.error(err);
+      alert('Ошибка загрузки: ' + err.message);
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // 🎯 Вставка смайлика
+  const insertEmoji = (emoji: string) => {
+    const input = inputRef.current;
+    if (!input) return;
+
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const newText = text.slice(0, start) + emoji + text.slice(end);
+    setText(newText);
+
+    setTimeout(() => {
+      input.focus();
+      input.setSelectionRange(start + emoji.length, start + emoji.length);
+    }, 0);
+  };
+
+  // 🎯 Broadcast «печатает»
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
 
@@ -206,23 +314,9 @@ export function ChatWindow({
     }
   };
 
-  // 🎯 Подсветка упоминаний @username
+  // 🎯 Просто текст (без @подсветки)
   const renderMessage = (msgText: string) => {
-    const parts = msgText.split(/(@[a-zA-Z0-9_]+)/g);
-
-    return parts.map((part, i) => {
-      if (part.startsWith('@')) {
-        return (
-          <span
-            key={i}
-            className="rounded bg-[#6C63FF]/30 px-1 font-medium text-[#B794F6]"
-          >
-            {part}
-          </span>
-        );
-      }
-      return <span key={i}>{part}</span>;
-    });
+    return <span>{msgText}</span>;
   };
 
   return (
@@ -253,7 +347,6 @@ export function ChatWindow({
                   {other.display_name[0]?.toUpperCase()}
                 </div>
               )}
-              {/* 🎯 Зелёная точка онлайн (заглушка) */}
               <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#0a0a0f] bg-green-400" />
             </div>
             <div>
@@ -282,6 +375,7 @@ export function ChatWindow({
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto"
         data-lenis-prevent
+        style={{ scrollbarWidth: 'thin' }}
       >
         <div className="container mx-auto max-w-3xl space-y-3 px-4 py-6">
           {messages.length === 0 && (
@@ -299,6 +393,7 @@ export function ChatWindow({
             const prevMsg = messages[i - 1];
             const showAvatar =
               !isMine && (!prevMsg || prevMsg.sender_id !== msg.sender_id);
+            const isImage = msg.message_type === 'image' && msg.image_url;
 
             return (
               <motion.div
@@ -327,32 +422,51 @@ export function ChatWindow({
                 )}
                 {!isMine && !showAvatar && <div className="w-7" />}
 
-                <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
-                    isMine
-                      ? 'rounded-br-sm bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-white'
-                      : 'rounded-bl-sm border border-white/5 bg-[#16161f]/80 text-white/90'
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap break-words">
-                    {renderMessage(msg.text)}
-                  </p>
+                {/* 🎯 Сообщение */}
+                {isImage ? (
                   <div
-                    className={`mt-1 text-[10px] ${
-                      isMine ? 'text-white/60' : 'text-white/30'
+                    className="group relative max-w-[60%] cursor-pointer overflow-hidden rounded-2xl border border-white/10"
+                    onClick={() => setPreviewImage(msg.image_url!)}
+                  >
+                    <img
+                      src={msg.image_url!}
+                      alt=""
+                      className="max-h-80 w-full object-cover transition group-hover:opacity-90"
+                    />
+                    <div className="absolute bottom-1 right-2 rounded bg-black/60 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur">
+                      {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
+                      isMine
+                        ? 'rounded-br-sm bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-white'
+                        : 'rounded-bl-sm border border-white/5 bg-[#16161f]/80 text-white/90'
                     }`}
                   >
-                    {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                    <p className="whitespace-pre-wrap break-words">
+                      {renderMessage(msg.text || '')}
+                    </p>
+                    <div
+                      className={`mt-1 text-[10px] ${
+                        isMine ? 'text-white/60' : 'text-white/30'
+                      }`}
+                    >
+                      {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
               </motion.div>
             );
           })}
 
-          {/* 🎯 Индикатор «печатает» */}
           {otherTyping && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -392,7 +506,7 @@ export function ChatWindow({
         </div>
       </div>
 
-      {/* 🎯 Кнопка «Вниз» */}
+      {/* Кнопка «Вниз» */}
       <AnimatePresence>
         {showScrollButton && (
           <motion.button
@@ -400,7 +514,7 @@ export function ChatWindow({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => scrollToBottom()}
-            className="absolute bottom-32 right-6 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-[#16161f] text-white shadow-2xl transition hover:bg-[#6C63FF]"
+            className="absolute bottom-32 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-[#16161f] text-white shadow-2xl transition hover:bg-[#6C63FF]"
           >
             <ChevronDown className="h-5 w-5" />
           </motion.button>
@@ -408,19 +522,90 @@ export function ChatWindow({
       </AnimatePresence>
 
       {/* INPUT */}
-      <div className="border-t border-white/5 bg-[#0a0a0f]/95 backdrop-blur-xl">
+      <div className="relative border-t border-white/5 bg-[#0a0a0f]/95 backdrop-blur-xl">
+        {/* 🎯 Эмодзи-пикер */}
+        <AnimatePresence>
+          {showEmojiPicker && (
+            <motion.div
+              ref={emojiPickerRef}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="absolute bottom-full left-4 mb-2 w-80 overflow-hidden rounded-2xl border border-white/10 bg-[#16161f] shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-white/5 p-3">
+                <span className="text-xs font-medium text-white/70">
+                  Смайлики
+                </span>
+                <button
+                  onClick={() => setShowEmojiPicker(false)}
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 text-white/40 transition hover:bg-white/10 hover:text-white"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <div className="grid max-h-64 grid-cols-8 gap-1 overflow-y-auto p-3" data-lenis-prevent>
+                {EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => insertEmoji(emoji)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-xl transition hover:bg-white/10 hover:scale-125"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="container mx-auto max-w-3xl px-4 py-4">
-          <div className="flex items-end gap-2 rounded-3xl border border-white/10 bg-white/[0.03] p-2 focus-within:border-[#6C63FF]/50 focus-within:ring-2 focus-within:ring-[#6C63FF]/20">
+          <div className="flex items-end gap-1 rounded-3xl border border-white/10 bg-white/[0.03] p-2 focus-within:border-[#6C63FF]/50 focus-within:ring-2 focus-within:ring-[#6C63FF]/20">
+            {/* 🎯 Кнопка смайликов */}
+            <button
+              onClick={() => setShowEmojiPicker((v) => !v)}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white ${
+                showEmojiPicker ? 'bg-[#6C63FF]/20 text-[#B794F6]' : ''
+              }`}
+              aria-label="Смайлики"
+            >
+              <Smile className="h-5 w-5" />
+            </button>
+
+            {/* 🎯 Кнопка картинки */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImage}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
+              aria-label="Картинка"
+            >
+              {uploadingImage ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <ImageIcon className="h-5 w-5" />
+              )}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+
+            {/* 🎯 Поле ввода */}
             <textarea
               ref={inputRef}
               value={text}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
-              placeholder="Напиши сообщение... (используй @username для упоминания)"
+              placeholder="Напиши сообщение..."
               rows={1}
-              className="max-h-32 flex-1 resize-none bg-transparent px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none"
+              className="max-h-32 flex-1 resize-none bg-transparent px-2 py-2 text-sm text-white placeholder:text-white/30 outline-none"
               style={{ minHeight: '36px' }}
             />
+
+            {/* 🎯 Кнопка отправки */}
             <button
               onClick={handleSend}
               disabled={!text.trim() || isSending}
@@ -438,6 +623,31 @@ export function ChatWindow({
           </div>
         </div>
       </div>
+
+      {/* 🎯 Просмотр картинки */}
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPreviewImage(null)}
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/95 p-4 backdrop-blur-md"
+          >
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <img
+              src={previewImage}
+              alt=""
+              className="max-h-full max-w-full object-contain"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

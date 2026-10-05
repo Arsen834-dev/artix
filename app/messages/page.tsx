@@ -29,7 +29,7 @@ async function ChatsContent() {
     return <div className="text-center text-white/60">Ошибка загрузки</div>;
   }
 
-  // Загружаем профили вторых участников
+  // Профили вторых участников
   const otherIds = (chats || [])
     .map((c: any) => (c.user1_id === user.id ? c.user2_id : c.user1_id))
     .filter((id, i, arr) => arr.indexOf(id) === i);
@@ -41,11 +41,29 @@ async function ChatsContent() {
 
   const profilesMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
+  // 🎯 Загружаем последнее сообщение из каждого чата
+  const chatIds = (chats || []).map((c: any) => c.id);
+
+  const { data: lastMessages } = await supabase
+    .from('messages')
+    .select('id, chat_id, sender_id, is_read, created_at')
+    .in('chat_id', chatIds)
+    .order('created_at', { ascending: false });
+
+  // 🎯 Для каждого чата — последнее сообщение
+  const lastMessageMap = new Map<number, any>();
+  (lastMessages || []).forEach((m: any) => {
+    if (!lastMessageMap.has(m.chat_id)) {
+      lastMessageMap.set(m.chat_id, m);
+    }
+  });
+
   const formatted = (chats || []).map((c: any) => {
     const isUser1 = c.user1_id === user.id;
     const otherId = isUser1 ? c.user2_id : c.user1_id;
     const other = profilesMap.get(otherId);
     const unread = isUser1 ? c.user1_unread : c.user2_unread;
+    const lastMsg = lastMessageMap.get(c.id);
 
     return {
       id: c.id,
@@ -53,15 +71,17 @@ async function ChatsContent() {
       last_message: c.last_message,
       last_message_at: c.last_message_at,
       unread,
+      last_sender_id: lastMsg?.sender_id || null,
+      is_read: lastMsg?.is_read || false,
     };
   });
 
-  return <ChatsList chats={formatted} />;
+  return <ChatsList chats={formatted} currentUserId={user.id} />;
 }
 
 export default function MessagesPage() {
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-12 pt-24">
       <div className="mb-12">
         <h1 className="display-title text-5xl font-bold md:text-6xl">
           <span className="gradient-text">Сообщения</span>

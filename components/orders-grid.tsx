@@ -97,7 +97,7 @@ export function OrdersGrid({ orders }: { orders: Order[] }) {
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.5, delay: (i % 2) * 0.1 }}
           >
-            <Link href={`/order/${order.id}`}>
+            <Link href={`/orders/${order.id}`}>
               <div className="group relative h-full overflow-hidden rounded-3xl border border-white/5 bg-[#16161f]/60 p-6 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-[#4FD1C5]/40 hover:shadow-2xl hover:shadow-[#4FD1C5]/20">
                 {/* Свечение при hover */}
                 <div className="pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full bg-[#4FD1C5]/20 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />

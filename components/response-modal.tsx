@@ -141,7 +141,6 @@ export function ResponseModal({
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="p-6">
-              {/* Заголовок */}
               <div className="mb-5 text-center">
                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#4FD1C5] to-[#68D391] shadow-2xl shadow-[#4FD1C5]/40">
                   <MessageCircle className="h-7 w-7 text-white" />
@@ -149,13 +148,12 @@ export function ResponseModal({
                 <h2 className="display-title text-xl font-bold text-white">
                   Откликнуться
                 </h2>
-                <p className="mt-1 text-xs text-white/50 line-clamp-1">
+                <p className="mt-1 line-clamp-1 text-xs text-white/50">
                   {orderTitle}
                 </p>
               </div>
 
               <div className="space-y-4">
-                {/* Сообщение */}
                 <div>
                   <label className="mb-2 block text-sm font-medium text-white/70">
                     Сообщение заказчику *
@@ -174,7 +172,6 @@ export function ResponseModal({
                   </div>
                 </div>
 
-                {/* Цена + Срок */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-white/70">
