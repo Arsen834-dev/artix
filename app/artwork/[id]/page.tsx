@@ -1,3 +1,4 @@
+// app/artwork/[id]/page.tsx
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
@@ -27,14 +28,18 @@ async function ArtworkContent({ id }: { id: string }) {
     notFound();
   }
 
-  // 🎯 Инкремент просмотров
-  await supabase.rpc('increment_artwork_views', { artwork_id: parseInt(id) });
+  // 🎯 Честный просмотр: только для залогиненных, только один раз
+  if (user) {
+    await supabase.rpc('register_artwork_view', {
+      p_artwork_id: parseInt(id),
+    });
+  }
 
   const artist = Array.isArray(artwork.artist)
     ? artwork.artist[0]
     : artwork.artist;
 
-  // 🎯 Проверяем лайк
+  // Проверяем лайк
   let isLiked = false;
   if (user) {
     const { data: like } = await supabase
