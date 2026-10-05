@@ -1,3 +1,4 @@
+// app/order/[id]/page.tsx
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
@@ -27,12 +28,15 @@ async function OrderContent({ id }: { id: string }) {
     notFound();
   }
 
-  // 🎯 Инкремент просмотров
-  await supabase.rpc('increment_order_views', { order_id: parseInt(id) });
+  // 🎯 Честный просмотр
+  if (user) {
+    await supabase.rpc('register_order_view', {
+      p_order_id: parseInt(id),
+    });
+  }
 
   const client = Array.isArray(order.client) ? order.client[0] : order.client;
 
-  // 🎯 Загрузка откликов
   const { data: responses } = await supabase
     .from('responses')
     .select(`

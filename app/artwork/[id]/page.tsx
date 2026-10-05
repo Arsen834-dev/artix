@@ -11,7 +11,6 @@ async function ArtworkContent({ id }: { id: string }) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Работа
   const { data: artwork, error } = await supabase
     .from('artworks')
     .select(`
@@ -28,7 +27,7 @@ async function ArtworkContent({ id }: { id: string }) {
     notFound();
   }
 
-  // 🎯 Честный просмотр: только для залогиненных, только один раз
+  // 🎯 Честный просмотр
   if (user) {
     await supabase.rpc('register_artwork_view', {
       p_artwork_id: parseInt(id),
@@ -39,7 +38,6 @@ async function ArtworkContent({ id }: { id: string }) {
     ? artwork.artist[0]
     : artwork.artist;
 
-  // Проверяем лайк
   let isLiked = false;
   if (user) {
     const { data: like } = await supabase
@@ -51,7 +49,6 @@ async function ArtworkContent({ id }: { id: string }) {
     isLiked = !!like;
   }
 
-  // Похожие
   const { data: similar } = await supabase
     .from('artworks')
     .select(`

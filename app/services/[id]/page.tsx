@@ -1,3 +1,4 @@
+// app/service/[id]/page.tsx
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
@@ -26,8 +27,12 @@ async function ServiceContent({ id }: { id: string }) {
     notFound();
   }
 
-  // 🎯 Инкремент просмотров
-  await supabase.rpc('increment_service_views', { service_id: parseInt(id) });
+  // 🎯 Честный просмотр
+  if (user) {
+    await supabase.rpc('register_service_view', {
+      p_service_id: parseInt(id),
+    });
+  }
 
   const artist = Array.isArray(service.artist)
     ? service.artist[0]
