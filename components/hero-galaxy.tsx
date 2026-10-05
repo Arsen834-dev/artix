@@ -168,6 +168,7 @@ function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) 
 
   useEffect(() => {
     let animationId: number;
+    const RANGE = window.innerHeight + 800; // цикл
 
     const animate = () => {
       if (moonRef.current) {
@@ -175,12 +176,11 @@ function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) 
           (velocityRef.current - lastVelocityRef.current) * 0.06;
         positionRef.current -= lastVelocityRef.current * 0.15;
 
-        const vw = window.innerWidth / 100;
-        const maxUp = -60 * vw;
-        const maxDown = 20 * vw;
-
-        if (positionRef.current < maxUp) positionRef.current = maxUp;
-        if (positionRef.current > maxDown) positionRef.current = maxDown;
+        // 🎯 Зацикливание
+        let y = positionRef.current;
+        while (y < -RANGE) y += RANGE;
+        while (y > RANGE) y -= RANGE;
+        positionRef.current = y;
 
         moonRef.current.style.transform = `translate(-50%, ${positionRef.current}px)`;
       }
@@ -189,7 +189,7 @@ function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) 
     animate();
     return () => cancelAnimationFrame(animationId);
   }, [velocityRef]);
-
+  
   return (
     <motion.div
       ref={moonRef}

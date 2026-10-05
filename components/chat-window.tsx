@@ -14,6 +14,7 @@ import {
   Image as ImageIcon,
   X,
 } from 'lucide-react';
+import { OnlineIndicator } from './online-indicator';
 
 type Message = {
   id: number;
@@ -30,6 +31,7 @@ type Profile = {
   display_name: string;
   avatar_url: string | null;
   is_sponsor: boolean;
+  last_seen_at?: string | null;
 };
 
 // 🎯 Набор смайликов
@@ -205,7 +207,7 @@ export function ChatWindow({
           text: trimmed,
           message_type: 'text',
         })
-        .select()
+        .select('id, sender_id, text, image_url, message_type, created_at')
         .single();
 
       if (error) throw error;
@@ -254,7 +256,6 @@ export function ChatWindow({
         data: { publicUrl },
       } = supabase.storage.from('chat-images').getPublicUrl(fileName);
 
-      // 🎯 Отправляем сообщение с картинкой
       const { data, error } = await supabase
         .from('messages')
         .insert({
@@ -264,7 +265,7 @@ export function ChatWindow({
           image_url: publicUrl,
           message_type: 'image',
         })
-        .select()
+        .select('id, sender_id, text, image_url, message_type, created_at')
         .single();
 
       if (error) throw error;
@@ -314,11 +315,6 @@ export function ChatWindow({
     }
   };
 
-  // 🎯 Просто текст (без @подсветки)
-  const renderMessage = (msgText: string) => {
-    return <span>{msgText}</span>;
-  };
-
   return (
     <div className="flex h-screen flex-col bg-[#0a0a0f] pt-16">
       {/* HEADER */}
@@ -347,7 +343,7 @@ export function ChatWindow({
                   {other.display_name[0]?.toUpperCase()}
                 </div>
               )}
-              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#0a0a0f] bg-green-400" />
+              <OnlineIndicator lastSeenAt={other.last_seen_at} />
             </div>
             <div>
               <div className="flex items-center gap-1">
@@ -371,12 +367,7 @@ export function ChatWindow({
       </div>
 
       {/* MESSAGES */}
-      <div
-        ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto"
-        data-lenis-prevent
-        style={{ scrollbarWidth: 'thin' }}
-      >
+      <div ref={messagesContainerRef} className="flex-1">
         <div className="container mx-auto max-w-3xl space-y-3 px-4 py-6">
           {messages.length === 0 && (
             <div className="py-20 text-center">
@@ -422,7 +413,6 @@ export function ChatWindow({
                 )}
                 {!isMine && !showAvatar && <div className="w-7" />}
 
-                {/* 🎯 Сообщение */}
                 {isImage ? (
                   <div
                     className="group relative max-w-[60%] cursor-pointer overflow-hidden rounded-2xl border border-white/10"
@@ -449,7 +439,7 @@ export function ChatWindow({
                     }`}
                   >
                     <p className="whitespace-pre-wrap break-words">
-                      {renderMessage(msg.text || '')}
+                      {msg.text || ''}
                     </p>
                     <div
                       className={`mt-1 text-[10px] ${
@@ -544,12 +534,15 @@ export function ChatWindow({
                   <X className="h-3 w-3" />
                 </button>
               </div>
-              <div className="grid max-h-64 grid-cols-8 gap-1 overflow-y-auto p-3" data-lenis-prevent>
+              <div
+                className="grid max-h-64 grid-cols-8 gap-1 overflow-y-auto p-3"
+                data-lenis-prevent
+              >
                 {EMOJIS.map((emoji) => (
                   <button
                     key={emoji}
                     onClick={() => insertEmoji(emoji)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-xl transition hover:bg-white/10 hover:scale-125"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-xl transition hover:scale-125 hover:bg-white/10"
                   >
                     {emoji}
                   </button>
@@ -561,7 +554,6 @@ export function ChatWindow({
 
         <div className="container mx-auto max-w-3xl px-4 py-4">
           <div className="flex items-end gap-1 rounded-3xl border border-white/10 bg-white/[0.03] p-2 focus-within:border-[#6C63FF]/50 focus-within:ring-2 focus-within:ring-[#6C63FF]/20">
-            {/* 🎯 Кнопка смайликов */}
             <button
               onClick={() => setShowEmojiPicker((v) => !v)}
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white ${
@@ -572,7 +564,6 @@ export function ChatWindow({
               <Smile className="h-5 w-5" />
             </button>
 
-            {/* 🎯 Кнопка картинки */}
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingImage}
@@ -593,7 +584,6 @@ export function ChatWindow({
               className="hidden"
             />
 
-            {/* 🎯 Поле ввода */}
             <textarea
               ref={inputRef}
               value={text}
@@ -605,7 +595,6 @@ export function ChatWindow({
               style={{ minHeight: '36px' }}
             />
 
-            {/* 🎯 Кнопка отправки */}
             <button
               onClick={handleSend}
               disabled={!text.trim() || isSending}

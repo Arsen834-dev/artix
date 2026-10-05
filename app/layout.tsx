@@ -7,6 +7,7 @@ import { SmoothScroll } from '@/components/smooth-scroll';
 import { SiteHeader } from '@/components/site-header';
 import { PageTransition } from '@/components/page-transition';
 import { AuthProvider } from '@/components/auth-provider';
+import { OnlineHeartbeat } from '@/components/online-heartbeat';
 
 const spaceGrotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
@@ -62,6 +63,7 @@ export default function RootLayout({
         className={`${spaceGrotesk.variable} ${inter.variable} ${unbounded.variable} antialiased bg-[#0a0a0f] text-white font-sans`}
       >
         <AuthProvider>
+          <OnlineHeartbeat />
           <CustomCursor />
           <CosmicBackground />
           <SmoothScroll>

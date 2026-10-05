@@ -22,25 +22,22 @@ async function ChatContent({ id }: { id: string }) {
 
   if (chat.user1_id !== user.id && chat.user2_id !== user.id) notFound();
 
-  const otherId =
-    chat.user1_id === user.id ? chat.user2_id : chat.user1_id;
+  const otherId = chat.user1_id === user.id ? chat.user2_id : chat.user1_id;
 
   const { data: otherProfile } = await supabase
     .from('profiles')
-    .select('id, username, display_name, avatar_url, is_sponsor')
+    .select('id, username, display_name, avatar_url, is_sponsor, last_seen_at')
     .eq('id', otherId)
     .single();
 
   if (!otherProfile) notFound();
 
-  // 🎯 Сообщения с новыми полями
   const { data: messages } = await supabase
     .from('messages')
     .select('id, sender_id, text, image_url, message_type, created_at')
     .eq('chat_id', chat.id)
     .order('created_at', { ascending: true });
 
-  // Пометить прочитанным
   const isUser1 = chat.user1_id === user.id;
   await supabase
     .from('chats')

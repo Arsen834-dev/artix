@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Star, Eye, ArrowUpRight } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { LikeButton } from '../like-button';
+import { useRef, useState } from 'react';
 
 export type ArtworkCardProps = {
   id: number;
@@ -37,9 +38,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: 'Другое',
 };
 
-// ============================================
-// КАРТОЧКА РАБОТЫ — НОВЫЙ ДИЗАЙН
-// ============================================
 function MasonryCard({
   artwork,
   index,
@@ -47,37 +45,62 @@ function MasonryCard({
   artwork: ArtworkCardProps;
   index: number;
 }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [rotate, setRotate] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    // 🎯 Наклон ОТ курсора
+    const rotateX = ((y - centerY) / centerY) * 8;
+    const rotateY = ((x - centerX) / centerX) * -8;
+
+    setRotate({ x: rotateX, y: rotateY });
+  };
+
+  const handleMouseLeave = () => {
+    setRotate({ x: 0, y: 0 });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-50px' }}
       transition={{ duration: 0.5, delay: (index % 4) * 0.05 }}
-      className="group mb-5 break-inside-avoid"
+      className="mb-5 break-inside-avoid"
     >
-      <Link href={`/artwork/${artwork.id}`} className="block">
-        <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-[#16161f]/60 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-[#6C63FF]/40 hover:shadow-2xl hover:shadow-[#6C63FF]/30">
-          {/* КАРТИНКА */}
+      <Link href={`/artwork/${artwork.id}`}>
+        <div
+          ref={cardRef}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          style={{
+            transform: `perspective(1000px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
+            transition: 'transform 0.15s ease-out',
+            transformStyle: 'preserve-3d',
+          }}
+          className="group relative overflow-hidden rounded-3xl border border-white/5 bg-[#16161f]/60 backdrop-blur-sm transition-shadow duration-500 hover:shadow-2xl hover:shadow-[#6C63FF]/20"
+        >
           <div className="relative w-full overflow-hidden">
             <img
               src={artwork.image_url}
               alt={artwork.title}
-              className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+              className="h-auto w-full object-cover"
               loading="lazy"
             />
 
-            {/* 🎯 ГРАДИЕНТ СВЕРХУ для читаемости бейджей */}
             <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
 
-            {/* 🎯 ГРАДИЕНТ СНИЗУ при hover */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
-            {/* БЕЙДЖ КАТЕГОРИИ — сверху слева */}
             <span className="pointer-events-none absolute left-3 top-3 rounded-full border border-white/10 bg-black/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-white/90 backdrop-blur-md">
               {CATEGORY_LABELS[artwork.category] || artwork.category}
             </span>
 
-            {/* БЕЙДЖ PRO — сверху справа */}
             {artwork.artist.is_sponsor && (
               <span className="pointer-events-none absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 px-2 py-0.5 text-[10px] font-bold text-black shadow-lg shadow-yellow-400/40">
                 <Star className="h-2.5 w-2.5 fill-current" />
@@ -85,7 +108,6 @@ function MasonryCard({
               </span>
             )}
 
-            {/* 🎯 ЛАЙК — правый нижний угол */}
             <div className="pointer-events-auto absolute bottom-3 right-3 z-10">
               <div className="rounded-full border border-white/10 bg-black/60 px-2.5 py-1 backdrop-blur-md">
                 <LikeButton
@@ -97,7 +119,8 @@ function MasonryCard({
               </div>
             </div>
 
-            {/* ИНФО ПРИ HOVER — снизу */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
             <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-6 p-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
               <h3 className="line-clamp-1 text-base font-bold text-white">
                 {artwork.title}
@@ -127,7 +150,6 @@ function MasonryCard({
             </div>
           </div>
 
-          {/* 🎯 ПОДПИСЬ ПОД КАРТИНКОЙ — минимальная, для мобилы */}
           <div className="p-3 md:hidden">
             <h3 className="line-clamp-1 text-sm font-semibold text-white">
               {artwork.title}
@@ -143,20 +165,12 @@ function MasonryCard({
               )}
             </div>
           </div>
-
-          {/* 🎯 Стрелка при hover */}
-          <div className="pointer-events-none absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 opacity-0 backdrop-blur-md transition-opacity duration-500 group-hover:opacity-100">
-            <ArrowUpRight className="h-4 w-4 text-white" />
-          </div>
         </div>
       </Link>
     </motion.div>
   );
 }
 
-// ============================================
-// ГЛАВНАЯ СЕТКА
-// ============================================
 export function FeedMain({ artworks }: { artworks: ArtworkCardProps[] }) {
   if (artworks.length === 0) {
     return (

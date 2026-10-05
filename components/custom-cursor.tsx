@@ -5,11 +5,9 @@ import { useEffect, useRef } from 'react';
 export function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const trailRef = useRef<HTMLDivElement>(null);
-  const glowRef = useRef<HTMLDivElement>(null);
 
   const mousePos = useRef({ x: 0, y: 0 });
   const trailPos = useRef({ x: 0, y: 0 });
-  const glowPos = useRef({ x: 0, y: 0 });
   const isHovering = useRef(false);
 
   useEffect(() => {
@@ -29,15 +27,8 @@ export function CustomCursor() {
     let animationId: number;
 
     const animate = () => {
-      // 🎯 Точка — мгновенно
-      // 🎯 Шлейф — плавно (0.15)
-      // 🎯 Свечение — ещё плавнее (0.08) — как "тянется"
-
       trailPos.current.x += (mousePos.current.x - trailPos.current.x) * 0.15;
       trailPos.current.y += (mousePos.current.y - trailPos.current.y) * 0.15;
-
-      glowPos.current.x += (mousePos.current.x - glowPos.current.x) * 0.08;
-      glowPos.current.y += (mousePos.current.y - glowPos.current.y) * 0.08;
 
       if (dotRef.current) {
         dotRef.current.style.transform = `translate(${mousePos.current.x}px, ${mousePos.current.y}px) translate(-50%, -50%)`;
@@ -54,15 +45,6 @@ export function CustomCursor() {
           : 'transparent';
       }
 
-      if (glowRef.current) {
-        glowRef.current.style.transform = `translate(${glowPos.current.x}px, ${glowPos.current.y}px) translate(-50%, -50%)`;
-
-        const glowSize = isHovering.current ? 300 : 200;
-        glowRef.current.style.width = `${glowSize}px`;
-        glowRef.current.style.height = `${glowSize}px`;
-        glowRef.current.style.opacity = isHovering.current ? '0.5' : '0.3';
-      }
-
       animationId = requestAnimationFrame(animate);
     };
     animate();
@@ -72,28 +54,14 @@ export function CustomCursor() {
 
   return (
     <>
-      {/* 🎯 СВЕЧЕНИЕ — самое плавное, позади всех */}
-      <div
-        ref={glowRef}
-        className="pointer-events-none fixed left-0 top-0 z-[999997] rounded-full transition-opacity duration-300"
-        style={{
-          width: 200,
-          height: 200,
-          background:
-            'radial-gradient(circle, rgba(108, 99, 255, 0.5) 0%, rgba(183, 148, 246, 0.2) 40%, transparent 70%)',
-          filter: 'blur(30px)',
-          opacity: 0.3,
-        }}
-      />
-
-      {/* 🎯 ШЛЕЙФ — плавный */}
+      {/* 🎯 Шлейф */}
       <div
         ref={trailRef}
         className="pointer-events-none fixed left-0 top-0 z-[999998] rounded-full border border-[#B794F6]/50 transition-[width,height,background] duration-300"
         style={{ width: 24, height: 24 }}
       />
 
-      {/* 🎯 ТОЧКА — мгновенная */}
+      {/* 🎯 Точка */}
       <div
         ref={dotRef}
         className="pointer-events-none fixed left-0 top-0 z-[999999]"
