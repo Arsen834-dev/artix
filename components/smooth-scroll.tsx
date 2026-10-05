@@ -2,25 +2,22 @@
 
 import { useEffect, useRef } from 'react';
 import Lenis from 'lenis';
+import { usePathname } from 'next/navigation';
 
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
+  const pathname = usePathname();
+
+  // 🎯 Отключаем Lenis для чата
+  const isChatPage = pathname.startsWith('/chat/');
 
   useEffect(() => {
+    if (isChatPage) return; // 🎯 На чате Lenis не нужен
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
-      // 🎯 Отключаем Lenis для элементов с data-lenis-prevent
-      prevent: (node) => {
-        // Проверяем сам элемент и его родителей
-        let el: HTMLElement | null = node;
-        while (el) {
-          if (el.hasAttribute('data-lenis-prevent')) return true;
-          el = el.parentElement;
-        }
-        return false;
-      },
     });
 
     lenisRef.current = lenis;
@@ -29,13 +26,13 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       lenis.raf(time);
       requestAnimationFrame(raf);
     }
-
     requestAnimationFrame(raf);
 
     return () => {
       lenis.destroy();
+      lenisRef.current = null;
     };
-  }, []);
+  }, [isChatPage]);
 
   return <>{children}</>;
 }

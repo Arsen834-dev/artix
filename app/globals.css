@@ -155,3 +155,8 @@ html.lenis body {
 .lenis.lenis-stopped {
   overflow: hidden;
 }
+/* 🎯 На странице чата — body не скроллится */
+body[data-page="chat"] {
+  overflow: hidden;
+  height: 100vh;
+}

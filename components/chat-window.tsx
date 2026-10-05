@@ -63,6 +63,14 @@ export function ChatWindow({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+  // 🎯 Скрываем скролл body пока чат открыт
+  useEffect(() => {
+    document.body.dataset.page = 'chat';
+    return () => {
+      delete document.body.dataset.page;
+    };
+  }, []);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
