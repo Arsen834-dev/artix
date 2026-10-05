@@ -1,12 +1,18 @@
+// components/cosmic-background.tsx
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 export function CosmicBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const glowRef = useRef<HTMLDivElement>(null);
 
-  // Звёзды на canvas
+  // 🎯 Целевая позиция мыши (куда хотим) и текущая (где рисуем)
+  const targetRef = useRef({ x: 0, y: 0 });
+  const currentRef = useRef({ x: 0, y: 0 });
+  const initializedRef = useRef(false);
+
+  // Звёзды на canvas — без изменений
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -58,13 +64,49 @@ export function CosmicBackground() {
     };
   }, []);
 
-  // Слежение за мышью для свечения
+  // 🎯 Слежение за мышью + плавный lerp через rAF (без ре-рендеров)
   useEffect(() => {
+    // На тач-устройствах не следим — свечение не нужно
+    if (typeof window === 'undefined') return;
+    const isFine = window.matchMedia('(pointer: fine)').matches;
+    if (!isFine) return;
+
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
+      targetRef.current = { x: e.clientX, y: e.clientY };
+
+      // При первом движении — сразу в точку, чтобы не летело из угла
+      if (!initializedRef.current) {
+        currentRef.current = { x: e.clientX, y: e.clientY };
+        initializedRef.current = true;
+      }
     };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+
+    let animationId: number;
+
+    const animate = () => {
+      const el = glowRef.current;
+      if (el) {
+        // 🎯 Lerp — плавное догоняние с инерцией
+        const ease = 0.08; // чем меньше — тем плавнее и медленнее
+        currentRef.current.x +=
+          (targetRef.current.x - currentRef.current.x) * ease;
+        currentRef.current.y +=
+          (targetRef.current.y - currentRef.current.y) * ease;
+
+        // 🎯 transform + translate3d → GPU-композит, не трогает layout
+        el.style.transform = `translate3d(${currentRef.current.x}px, ${currentRef.current.y}px, 0) translate(-50%, -50%)`;
+      }
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(animationId);
+    };
   }, []);
 
   return (
@@ -107,16 +149,16 @@ export function CosmicBackground() {
         />
       </div>
 
-      {/* Свечение вокруг курсора — усиленное */}
+      {/* 🎯 Свечение вокруг курсора — плавное, через rAF + lerp */}
       <div
-        className="pointer-events-none fixed z-0 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40 blur-[120px] transition-all duration-500 ease-out"
+        ref={glowRef}
+        className="pointer-events-none fixed left-0 top-0 z-0 h-[600px] w-[600px] rounded-full opacity-40 blur-[120px] will-change-transform"
         style={{
-          left: mousePos.x,
-          top: mousePos.y,
           background:
             'radial-gradient(circle, rgba(108, 99, 255, 0.8) 0%, rgba(183, 148, 246, 0.4) 30%, transparent 70%)',
+          transform: 'translate3d(-9999px, -9999px, 0)', // старт за экраном
         }}
-      />      
+      />
     </>
   );
 }
