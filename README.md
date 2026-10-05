@@ -1,109 +1,168 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Artix — архитектура
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+## 🎯 Идея
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+Artix — фриланс-биржа для художников в стиле космической галереи. Художники показывают работы, продают услуги, получают заказы. Заказчики ищут таланты.
 
-## Features
+## 🏗 Стек
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+- **Next.js 16** (App Router) + TypeScript
+- **Tailwind CSS 4** + **shadcn/ui**
+- **Framer Motion** — анимации
+- **Supabase** — БД + Auth + Storage + Realtime
+- **Matter.js** — физика лоадера
+- **Lenis** — плавный скролл
+- **react-easy-crop** — кроп
+- **Vercel** — хостинг
 
-## Demo
+## 🎨 Дизайн
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+- Тёмный фон `#0a0a0f`, карточки `#16161f`
+- Акценты: `#6C63FF` (фиолет), `#B794F6` (светло-фиолет), `#4FD1C5` (бирюза)
+- Шрифты: Space Grotesk, Unbounded (заголовки), Inter (текст)
+- Классы: `glass`, `gradient-text`, `display-title`
 
-## Deploy to Vercel
+## 🚀 Страницы
 
-Vercel deployment will guide you through creating a Supabase account and project.
+### Главная `/`
+- `Loader` (Matter.js) → `HeroGalaxy`
+- Луна, ARTIX, летающие карточки, печатающийся текст
+- Кнопки «Смотреть галактику» / «Присоединиться»
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+### Ленты
+- `/feed` — работы (masonry)
+- `/services` — услуги
+- `/orders` — заказы (только `status = 'open'`)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+### Детали
+- `/artwork/[id]`, `/service/[id]`, `/order/[id]`
+- `/artist/[username]` — профиль с табами
+- `/artists` — список художников
+- `/about`, `/gallery`, `/upload`
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+### Auth
+- `/auth/login`, `/auth/sign-up`, `/auth/sign-up-success`
+- `/auth/callback`, `/auth/confirm` — OTP
+- `/auth/forgot-password`, `/auth/update-password`
+- `/auth/auth-code-error`, `/auth/error`
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+### Приватные
+- `/settings/profile`
+- `/messages`, `/chat/[id]`
+- `/deals`, `/deals/[id]`
 
-## Clone and run locally
+## 🗄 БД (Supabase)
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+### Основные таблицы
 
-2. Create a Next.js app using the Supabase Starter template npx command
+**`profiles`**
+- `id` (uuid, FK `auth.users`), `username` (unique), `display_name`
+- `avatar_url`, `cover_url`, `bio`, `role` (`artist|client|both`), `price_range`
+- `is_sponsor` (синхронизируется триггером из `sponsorships`)
+- `last_seen_at` (для онлайн-индикатора)
+- Соцсети: `telegram_url`, `instagram_url`, `tiktok_url`, `vk_url`, `discord_url`, `boosty_url`, `behance_url`, `artstation_url`, `website_url`
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+**`artworks`**
+- `artist_id`, `title`, `description`, `image_url`
+- `category`, `price`, `tags` (`text[]`)
+- `likes_count` (триггер от `likes`), `views_count` (RPC)
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+**`services`**
+- `artist_id`, `title`, `description`, `image_url`
+- `category`, `price`, `price_type` (`from|exact|range`), `price_to`
+- `delivery_days`, `tags`, `is_active`, `views_count`
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+**`orders`**
+- `client_id`, `title`, `description`, `image_url`
+- `category`, `budget`, `budget_type`, `budget_to`, `deadline_days`
+- `tags`, `status` (`open|in_progress|done|cancelled`)
+- `responses_count` (триггер от `responses`), `views_count`
 
-3. Use `cd` to change into the app's directory
+**`likes`**
+- `user_id`, `artwork_id`, `created_at`
+- UNIQUE `(user_id, artwork_id)`
 
-   ```bash
-   cd with-supabase-app
-   ```
+**`chats`**
+- `user1_id`, `user2_id` (CHECK `user1_id < user2_id`, UNIQUE `(user1_id, user2_id)`)
+- `last_message`, `last_message_at`, `user1_unread`, `user2_unread`
 
-4. Rename `.env.example` to `.env.local` and update the following:
+**`messages`**
+- `chat_id`, `sender_id`, `text`, `image_url`, `message_type` (`text|image`)
+- `is_read` (обновляется RPC `mark_chat_messages_read`)
 
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+**`responses`**
+- `order_id`, `artist_id`, `message`, `price`, `delivery_days`, `status`
+- UNIQUE `(order_id, artist_id)`
 
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+**`reviews`**
+- `author_id`, `target_id`, `deal_id`, `rating`, `comment`
+- UNIQUE `(author_id, target_id, deal_id)`
 
-5. You can now run the Next.js local development server:
+**`deals`** (эскроу-имитация)
+- `client_id`, `artist_id`, `service_id`, `order_id`
+- `title`, `description`, `amount`, `commission_percent`, `commission_amount`, `artist_amount`
+- `status` (`pending|paid|in_progress|completed|disputed|cancelled`)
+- `client_paid`, `artist_completed`, `client_confirmed`
+- `paid_at`, `completed_at`
 
-   ```bash
-   npm run dev
-   ```
+**`transactions`**
+- `deal_id`, `user_id`, `type`, `amount`, `status`, `description`
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+**`sponsorships`**
+- `user_id`, `amount`, `months`, `source` (`boosty`), `is_active`, `expires_at`, `external_id`
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+### Storage buckets
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+- **`artworks`** (PUBLIC, 10MB, image/*)
+- **`avatars`** (PUBLIC, 5MB, image/*)
+- **`chat-images`** (PRIVATE, 5MB, image/*) — через signed URLs
 
-## Feedback and issues
+### Триггеры
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+- `handle_new_user` — создаёт профиль при регистрации, разрешает коллизии username (`user`, `user1`, `user2`)
+- `on_like_change` → `update_artwork_likes_count`
+- `on_message_insert` → `update_chat_last_message` (картинки → «📷 Фото»)
+- `on_response_change` → `update_order_responses_count`
+- `on_sponsorship_change` → `sync_sponsor_status`
 
-## More Supabase examples
+### RPC
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+- `increment_artwork_views(id)`, `increment_order_views(id)`, `increment_service_views(id)`
+- `mark_chat_messages_read(chat_id)` — помечает `is_read` и сбрасывает unread
+- `recalc_all_sponsors()` — ручной пересчёт `is_sponsor`
+
+### RLS
+
+- `profiles` — SELECT всем, UPDATE только владельцу
+- `artworks`, `services`, `orders`, `likes`, `responses` — SELECT всем, CRUD только владельцу
+- `chats`, `messages` — только участники
+- `deals`, `transactions` — только `client_id`/`artist_id`
+- `sponsorships` — SELECT всем, INSERT только `service_role`
+
+## 📦 Переменные окружения
+
+## 🧩 Ключевые компоненты
+
+- `HomeContent` — лоадер + hero
+- `HeroGalaxy` — луна, карточки, ARTIX
+- `Loader` — Matter.js, прогресс 0→100
+- `AuthProvider` — контекст, `requireAuth`, `pendingAction` после логина
+- `ChatWindow` — realtime, типинг, signed URLs, `mark_chat_messages_read`
+- `DealModal`, `DealPageContent` — эскроу-имитация
+- `Gallery3D` — 3D-галерея, режимы «СФЕРА» / «СПИРАЛЬ»
+- `UploadForm` — публикация работы/услуги/заказа
+- `ProfileEditForm` — аватар, обложка, био, роль, соцсети
+
+## 🛠 Утилиты
+
+- `lib/constants.ts` — категории, форматы, статусы
+- `lib/use-body-scroll-lock.ts` — реф-счётчик для `overflow: hidden`
+- `lib/utils.ts` — `cn()` для Tailwind
+- `lib/supabase/{client,server,proxy}.ts`
+
+## 📝 Заметки
+
+- `deals` / `transactions` — **имитация** эскроу. Реальной оплаты нет.
+- `SponsorModal` — прямой перевод на карту, не эквайринг.
+- `artworks.price` — nullable, но через UI не задаётся. Оставлен для старых данных.
+- `chat-images` — PRIVATE, доступ через signed URL (7 дней).

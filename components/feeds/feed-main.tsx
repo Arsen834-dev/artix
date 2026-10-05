@@ -1,3 +1,4 @@
+// components/feeds/feed-main.tsx
 'use client';
 
 import Link from 'next/link';
@@ -5,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
 import { LikeButton } from '../like-button';
 import { useRef, useState } from 'react';
+import { getCategoryLabel } from '@/lib/constants';
 
 export type ArtworkCardProps = {
   id: number;
@@ -21,21 +23,6 @@ export type ArtworkCardProps = {
     avatar_url: string | null;
     is_sponsor: boolean;
   };
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  portrait: 'Портреты',
-  fantasy: 'Фэнтези',
-  anime: 'Аниме',
-  illustration: 'Иллюстрации',
-  '3d': '3D',
-  pixel: 'Пиксель-арт',
-  scifi: 'Sci-Fi',
-  concept: 'Концепт-арт',
-  sketch: 'Скетчи',
-  nature: 'Природа',
-  architecture: 'Архитектура',
-  other: 'Другое',
 };
 
 function MasonryCard({
@@ -56,7 +43,6 @@ function MasonryCard({
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    // 🎯 Наклон ОТ курсора
     const rotateX = ((y - centerY) / centerY) * 8;
     const rotateY = ((x - centerX) / centerX) * -8;
 
@@ -98,7 +84,7 @@ function MasonryCard({
             <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
 
             <span className="pointer-events-none absolute left-3 top-3 rounded-full border border-white/10 bg-black/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-white/90 backdrop-blur-md">
-              {CATEGORY_LABELS[artwork.category] || artwork.category}
+              {getCategoryLabel(artwork.category)}
             </span>
 
             {artwork.artist.is_sponsor && (

@@ -1,3 +1,4 @@
+// app/layout.tsx
 import type { Metadata } from 'next';
 import { Space_Grotesk, Inter, Unbounded } from 'next/font/google';
 import './globals.css';
@@ -8,6 +9,7 @@ import { SiteHeader } from '@/components/site-header';
 import { PageTransition } from '@/components/page-transition';
 import { AuthProvider } from '@/components/auth-provider';
 import { OnlineHeartbeat } from '@/components/online-heartbeat';
+import { createClient } from '@/lib/supabase/server';
 
 const spaceGrotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
@@ -52,18 +54,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <html lang="ru" suppressHydrationWarning>
       <body
         className={`${spaceGrotesk.variable} ${inter.variable} ${unbounded.variable} antialiased bg-[#0a0a0f] text-white font-sans`}
       >
-        <AuthProvider>
-          <OnlineHeartbeat />
+        <AuthProvider initialUser={user}>
+          {user && <OnlineHeartbeat />}
           <CustomCursor />
           <CosmicBackground />
           <SmoothScroll>

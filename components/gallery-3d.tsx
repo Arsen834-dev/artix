@@ -1,3 +1,4 @@
+// components/gallery-3d.tsx
 'use client';
 
 import { Canvas, useFrame } from '@react-three/fiber';
@@ -39,6 +40,27 @@ function generateSpherePositions(count: number): [number, number, number][] {
 }
 
 // ============================================
+// РАСПРЕДЕЛЕНИЕ КАРТОЧЕК ПО СПИРАЛИ
+// ============================================
+function generateSpiralPositions(count: number): [number, number, number][] {
+  const result: [number, number, number][] = [];
+  const radius = 5;
+  const height = 14;
+  const turns = 2.5;
+
+  for (let i = 0; i < count; i++) {
+    const t = i / (count - 1);
+    const angle = t * Math.PI * 2 * turns;
+    const y = (t - 0.5) * height;
+    const r = radius * (1 - t * 0.4); // сужается к верху
+
+    result.push([Math.cos(angle) * r, y, Math.sin(angle) * r]);
+  }
+
+  return result;
+}
+
+// ============================================
 // КАРТОЧКА
 // ============================================
 function Card({
@@ -46,11 +68,13 @@ function Card({
   basePosition,
   baseScale,
   scrollOffset,
+  onHover,
 }: {
   artwork: Artwork3D;
   basePosition: [number, number, number];
   baseScale: number;
   scrollOffset: React.MutableRefObject<number>;
+  onHover: (hovering: boolean) => void;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
@@ -68,10 +92,8 @@ function Card({
   useFrame(() => {
     if (!groupRef.current) return;
 
-    // Бесконечный скролл по Y
     const range = 14;
     let y = basePosition[1] + scrollOffset.current;
-    // Зацикливание
     while (y > range) y -= range * 2;
     while (y < -range) y += range * 2;
 
@@ -86,11 +108,11 @@ function Card({
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
-          document.body.style.cursor = 'pointer';
+          onHover(true);
         }}
         onPointerOut={() => {
           setHovered(false);
-          document.body.style.cursor = 'auto';
+          onHover(false);
         }}
         scale={hovered ? baseScale * 1.2 : baseScale}
       >
@@ -119,12 +141,11 @@ function Card({
 }
 
 // ============================================
-// ЦЕНТРАЛЬНЫЙ ШАР — МНОГО МАЛЕНЬКИХ СФЕР
+// ЦЕНТРАЛЬНЫЙ ШАР
 // ============================================
 function CenterOrb() {
   const groupRef = useRef<THREE.Group>(null);
 
-  // Много маленьких сфер, собранных в шар (как в k95)
   const dots = useMemo(() => {
     const result: Array<[number, number, number]> = [];
     const count = 80;
@@ -145,31 +166,46 @@ function CenterOrb() {
   useFrame((state) => {
     if (groupRef.current) {
       groupRef.current.rotation.y = state.clock.elapsedTime * 0.2;
-      groupRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
+      groupRef.current.rotation.x =
+        Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
     }
   });
 
   return (
     <group ref={groupRef}>
-      {/* Много маленьких сфер — они и создают объём */}
       {dots.map((pos, i) => (
         <mesh key={i} position={pos}>
           <sphereGeometry args={[0.05, 8, 8]} />
           <meshBasicMaterial
-            color={i % 3 === 0 ? '#B794F6' : i % 3 === 1 ? '#6C63FF' : '#4FD1C5'}
+            color={
+              i % 3 === 0 ? '#B794F6' : i % 3 === 1 ? '#6C63FF' : '#4FD1C5'
+            }
             toneMapped={false}
           />
         </mesh>
       ))}
 
-      {/* Внутренняя светящаяся сфера */}
       <Sphere args={[0.4, 32, 32]}>
-        <meshBasicMaterial color="#B794F6" transparent opacity={0.6} toneMapped={false} />
+        <meshBasicMaterial
+          color="#B794F6"
+          transparent
+          opacity={0.6}
+          toneMapped={false}
+        />
       </Sphere>
 
-      {/* Свечение */}
-      <pointLight position={[0, 0, 0]} color="#6C63FF" intensity={6} distance={15} />
-      <pointLight position={[0, 0, 0]} color="#B794F6" intensity={4} distance={20} />
+      <pointLight
+        position={[0, 0, 0]}
+        color="#6C63FF"
+        intensity={6}
+        distance={15}
+      />
+      <pointLight
+        position={[0, 0, 0]}
+        color="#B794F6"
+        intensity={4}
+        distance={20}
+      />
     </group>
   );
 }
@@ -177,31 +213,43 @@ function CenterOrb() {
 // ============================================
 // ГРУППА КАРТОЧЕК
 // ============================================
-function CardsGroup({ artworks }: { artworks: Artwork3D[] }) {
+function CardsGroup({
+  artworks,
+  mode,
+  onHover,
+}: {
+  artworks: Artwork3D[];
+  mode: ViewMode;
+  onHover: (hovering: boolean) => void;
+}) {
   const scrollOffset = useRef(0);
   const velocityRef = useRef(0);
 
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      velocityRef.current += e.deltaY * 0.0008; // ЕЩЁ медленнее
+      velocityRef.current += e.deltaY * 0.0008;
     };
     window.addEventListener('wheel', handleWheel, { passive: true });
     return () => window.removeEventListener('wheel', handleWheel);
   }, []);
 
+  // 🎯 Позиции зависят от режима
   const positions = useMemo(
-    () => generateSpherePositions(artworks.length),
-    [artworks.length]
+    () =>
+      mode === 'rings'
+        ? generateSpherePositions(artworks.length)
+        : generateSpiralPositions(artworks.length),
+    [artworks.length, mode],
   );
 
   const scales = useMemo(
     () => artworks.map(() => 0.5 + Math.random() * 0.5),
-    [artworks.length]
+    [artworks.length],
   );
 
   useFrame(() => {
     scrollOffset.current += velocityRef.current;
-    velocityRef.current *= 0.95; // Плавное затухание
+    velocityRef.current *= 0.95;
   });
 
   return (
@@ -213,6 +261,7 @@ function CardsGroup({ artworks }: { artworks: Artwork3D[] }) {
           basePosition={positions[i]}
           baseScale={scales[i]}
           scrollOffset={scrollOffset}
+          onHover={onHover}
         />
       ))}
     </group>
@@ -224,6 +273,7 @@ function CardsGroup({ artworks }: { artworks: Artwork3D[] }) {
 // ============================================
 export function Gallery3D({ artworks }: { artworks: Artwork3D[] }) {
   const [mode, setMode] = useState<ViewMode>('rings');
+  const [hovering, setHovering] = useState(false);
 
   if (artworks.length === 0) {
     return (
@@ -234,7 +284,9 @@ export function Gallery3D({ artworks }: { artworks: Artwork3D[] }) {
   }
 
   return (
-    <div className="relative h-screen w-full">
+    <div
+      className={`relative h-screen w-full ${hovering ? 'cursor-pointer' : ''}`}
+    >
       <div className="absolute left-1/2 top-24 z-10 -translate-x-1/2">
         <div className="glass flex gap-1 rounded-full p-1">
           <button
@@ -250,7 +302,7 @@ export function Gallery3D({ artworks }: { artworks: Artwork3D[] }) {
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
-            <span className="relative">RINGS</span>
+            <span className="relative">СФЕРА</span>
           </button>
           <button
             onClick={() => setMode('spiral')}
@@ -265,17 +317,16 @@ export function Gallery3D({ artworks }: { artworks: Artwork3D[] }) {
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
-            <span className="relative">SPIRAL</span>
+            <span className="relative">СПИРАЛЬ</span>
           </button>
         </div>
       </div>
 
-      {/* Камера ВНУТРИ, БЕЗ wireframe */}
       <Canvas camera={{ position: [0, 0, 0.1], fov: 80 }}>
         <ambientLight intensity={1} />
 
         <CenterOrb />
-        <CardsGroup artworks={artworks} />
+        <CardsGroup artworks={artworks} mode={mode} onHover={setHovering} />
 
         <OrbitControls
           enableZoom={false}

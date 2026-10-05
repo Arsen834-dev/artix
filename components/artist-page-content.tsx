@@ -1,3 +1,4 @@
+// components/artist-page-content.tsx
 'use client';
 
 import Link from 'next/link';
@@ -22,9 +23,17 @@ import {
   Users,
   MessageSquare,
   Settings,
+  type LucideIcon,
 } from 'lucide-react';
 import { StartChatButton } from './start-chat-button';
 import { ReviewsList } from './reviews-list';
+import {
+  getCategoryLabel,
+  formatServicePrice,
+  formatOrderBudget,
+  formatDelivery,
+  formatDeliveryShort,
+} from '@/lib/constants';
 
 type Profile = {
   id: string;
@@ -98,47 +107,6 @@ type Review = {
   };
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  portrait: 'Портреты',
-  fantasy: 'Фэнтези',
-  anime: 'Аниме',
-  illustration: 'Иллюстрации',
-  '3d': '3D',
-  pixel: 'Пиксель-арт',
-  scifi: 'Sci-Fi',
-  concept: 'Концепт-арт',
-  sketch: 'Скетчи',
-  nature: 'Природа',
-  architecture: 'Архитектура',
-  other: 'Другое',
-};
-
-function formatServicePrice(service: Service): string {
-  if (service.price_type === 'from') {
-    return `от ${service.price.toLocaleString('ru-RU')}₽`;
-  }
-  if (service.price_type === 'range' && service.price_to) {
-    return `${service.price.toLocaleString('ru-RU')}–${service.price_to.toLocaleString('ru-RU')}₽`;
-  }
-  return `${service.price.toLocaleString('ru-RU')}₽`;
-}
-
-function formatOrderBudget(order: Order): string {
-  if (order.budget_type === 'up_to') {
-    return `до ${order.budget.toLocaleString('ru-RU')}₽`;
-  }
-  if (order.budget_type === 'range' && order.budget_to) {
-    return `${order.budget.toLocaleString('ru-RU')}–${order.budget_to.toLocaleString('ru-RU')}₽`;
-  }
-  return `${order.budget.toLocaleString('ru-RU')}₽`;
-}
-
-function formatDelivery(days: number): string {
-  if (days === 1) return '1 день';
-  if (days < 5) return `${days} дня`;
-  return `${days} дней`;
-}
-
 function SocialLinks({ profile }: { profile: Profile }) {
   const links = [
     { url: profile.telegram_url, label: 'Telegram', icon: Send, color: 'hover:text-[#0088cc] hover:border-[#0088cc]/40' },
@@ -200,7 +168,7 @@ function ArtworkCard({ artwork, index }: { artwork: Artwork; index: number }) {
             </h3>
             <div className="mt-1 flex items-center justify-between">
               <span className="text-xs text-white/50">
-                {CATEGORY_LABELS[artwork.category] || artwork.category}
+                {getCategoryLabel(artwork.category)}
               </span>
               <span className="flex items-center gap-1 text-xs text-white/60">
                 <Heart className="h-3 w-3" />
@@ -236,7 +204,7 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
               </div>
             )}
             <span className="glass absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-medium text-white/90">
-              {CATEGORY_LABELS[service.category] || service.category}
+              {getCategoryLabel(service.category)}
             </span>
           </div>
           <div className="p-5">
@@ -270,11 +238,11 @@ function OrderCard({ order, index }: { order: Order; index: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
     >
-      <Link href={`/order/${order.id}`}>
+      <Link href={`/orders/${order.id}`}>
         <div className="group h-full overflow-hidden rounded-3xl border border-white/5 bg-[#16161f]/60 p-6 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-[#4FD1C5]/40 hover:shadow-2xl hover:shadow-[#4FD1C5]/20">
           <div className="mb-3 flex items-center justify-between">
             <span className="glass rounded-full px-3 py-1 text-xs font-medium text-white/90">
-              {CATEGORY_LABELS[order.category] || order.category}
+              {getCategoryLabel(order.category)}
             </span>
             {isOpen ? (
               <span className="flex items-center gap-1 rounded-full bg-green-500/20 px-2.5 py-1 text-xs font-medium text-green-400">
@@ -304,7 +272,7 @@ function OrderCard({ order, index }: { order: Order; index: number }) {
                 {order.deadline_days && (
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {formatDelivery(order.deadline_days)}
+                    {formatDeliveryShort(order.deadline_days)}
                   </span>
                 )}
                 <span className="flex items-center gap-1">
@@ -351,7 +319,7 @@ export function ArtistPageContent({
   const tabs: Array<{
     key: 'artworks' | 'services' | 'orders' | 'reviews';
     label: string;
-    icon: any;
+    icon: LucideIcon;
     count: number;
   }> = [];
 
@@ -670,7 +638,7 @@ function EmptyState({
   title,
   subtitle,
 }: {
-  icon: any;
+  icon: LucideIcon;
   title: string;
   subtitle: string;
 }) {

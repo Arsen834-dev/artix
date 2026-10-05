@@ -1,3 +1,4 @@
+// components/chat-window.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -34,7 +35,6 @@ type Profile = {
   last_seen_at?: string | null;
 };
 
-// 🎯 Набор смайликов
 const EMOJIS = [
   '😀', '😂', '🥰', '😎', '🤔', '😴', '🥳', '😢',
   '😡', '🤯', '😱', '🤗', '🙃', '😇', '🤩', '😋',
@@ -42,6 +42,34 @@ const EMOJIS = [
   '❤️', '🔥', '✨', '⭐', '💯', '🎉', '🎨', '🚀',
   '🐱', '🐶', '🦊', '🐉', '🌙', '🌌', '🪐', '👽',
 ];
+
+const SIGNED_URL_TTL = 60 * 60 * 24 * 7; // 7 дней
+
+// 🎯 Создаём supabase-клиент один раз на модуль
+let supabaseClient: ReturnType<typeof createClient> | null = null;
+function getSupabase() {
+  if (!supabaseClient) {
+    supabaseClient = createClient();
+  }
+  return supabaseClient;
+}
+
+/**
+ * Получить отображаемый URL для картинки.
+ * - Если это полный http(s) URL — старые данные, используем как есть.
+ * - Если это path (chatId/file.jpg) — генерируем signed URL.
+ */
+async function resolveImageUrl(raw: string): Promise<string> {
+  if (!raw) return raw;
+  if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    return raw;
+  }
+  const supabase = getSupabase();
+  const { data } = await supabase.storage
+    .from('chat-images')
+    .createSignedUrl(raw, SIGNED_URL_TTL);
+  return data?.signedUrl || raw;
+}
 
 export function ChatWindow({
   chatId,
@@ -63,7 +91,9 @@ export function ChatWindow({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // 🎯 Скрываем скролл body пока чат открыт
+  // 🎯 Кеш signed URL: raw → displayUrl
+  const [imageUrlCache, setImageUrlCache] = useState<Record<string, string>>({});
+
   useEffect(() => {
     document.body.dataset.page = 'chat';
     return () => {
@@ -77,8 +107,37 @@ export function ChatWindow({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingChannelRef = useRef<ReturnType<
+    ReturnType<typeof getSupabase>['channel']
+  > | null>(null);
 
-  // 🎯 Скролл вниз
+  // 🎯 Резолвим signed URL для всех картинок
+  useEffect(() => {
+    let mounted = true;
+    const toResolve = messages
+      .filter((m) => m.message_type === 'image' && m.image_url)
+      .map((m) => m.image_url!)
+      .filter((raw) => !imageUrlCache[raw] && !raw.startsWith('http'));
+
+    if (toResolve.length === 0) return;
+
+    (async () => {
+      const updates: Record<string, string> = {};
+      for (const raw of toResolve) {
+        const url = await resolveImageUrl(raw);
+        updates[raw] = url;
+      }
+      if (mounted) {
+        setImageUrlCache((prev) => ({ ...prev, ...updates }));
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
+
   const scrollToBottom = (smooth = true) => {
     messagesEndRef.current?.scrollIntoView({
       behavior: smooth ? 'smooth' : 'auto',
@@ -93,7 +152,6 @@ export function ChatWindow({
     scrollToBottom();
   }, [messages.length]);
 
-  // 🎯 Кнопка «Вниз» если проскроллил
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -110,7 +168,7 @@ export function ChatWindow({
 
   // 🎯 Realtime — новые сообщения
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = getSupabase();
 
     const channel = supabase
       .channel(`chat-${chatId}`)
@@ -128,18 +186,29 @@ export function ChatWindow({
             if (prev.some((m) => m.id === newMessage.id)) return prev;
             return [...prev, newMessage];
           });
-        }
+
+          // 🎯 Если это чужое сообщение — помечаем прочитанным
+          if (newMessage.sender_id !== userId) {
+            supabase.rpc('mark_chat_messages_read', { p_chat_id: chatId });
+          }
+        },
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
+  }, [chatId, userId]);
+
+  // 🎯 Помечаем прочитанным при открытии чата
+  useEffect(() => {
+    const supabase = getSupabase();
+    supabase.rpc('mark_chat_messages_read', { p_chat_id: chatId });
   }, [chatId]);
 
-  // 🎯 Индикатор «печатает»
+  // 🎯 Индикатор «печатает» — канал в useRef, один раз
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = getSupabase();
 
     const channel = supabase.channel(`typing-${chatId}`, {
       config: { broadcast: { self: false } },
@@ -161,11 +230,12 @@ export function ChatWindow({
       })
       .subscribe();
 
+    typingChannelRef.current = channel;
+
     return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       supabase.removeChannel(channel);
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
+      typingChannelRef.current = null;
     };
   }, [chatId, userId]);
 
@@ -206,7 +276,7 @@ export function ChatWindow({
     setText('');
 
     try {
-      const supabase = createClient();
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from('messages')
         .insert({
@@ -221,7 +291,7 @@ export function ChatWindow({
       if (error) throw error;
 
       setMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? (data as Message) : m))
+        prev.map((m) => (m.id === tempId ? (data as Message) : m)),
       );
     } catch (err) {
       console.error(err);
@@ -250,27 +320,25 @@ export function ChatWindow({
     setUploadingImage(true);
 
     try {
-      const supabase = createClient();
+      const supabase = getSupabase();
       const fileExt = file.name.split('.').pop();
-      const fileName = `${chatId}/${Date.now()}.${fileExt}`;
+      // 🎯 Храним PATH, а не URL
+      const filePath = `${chatId}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('chat-images')
-        .upload(fileName, file);
+        .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('chat-images').getPublicUrl(fileName);
-
+      // 🎯 В БД сохраняем PATH. Signed URL сгенерируем при рендере.
       const { data, error } = await supabase
         .from('messages')
         .insert({
           chat_id: chatId,
           sender_id: userId,
           text: null,
-          image_url: publicUrl,
+          image_url: filePath,
           message_type: 'image',
         })
         .select('id, sender_id, text, image_url, message_type, created_at')
@@ -304,12 +372,11 @@ export function ChatWindow({
     }, 0);
   };
 
-  // 🎯 Broadcast «печатает»
+  // 🎯 Broadcast «печатает» — через useRef-канал
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
 
-    const supabase = createClient();
-    supabase.channel(`typing-${chatId}`).send({
+    typingChannelRef.current?.send({
       type: 'broadcast',
       event: 'typing',
       payload: { userId },
@@ -321,6 +388,13 @@ export function ChatWindow({
       e.preventDefault();
       handleSend();
     }
+  };
+
+  // 🎯 Получить отображаемый URL картинки
+  const getDisplayUrl = (raw: string | null): string | null => {
+    if (!raw) return null;
+    if (raw.startsWith('http')) return raw;
+    return imageUrlCache[raw] || null;
   };
 
   return (
@@ -375,10 +449,7 @@ export function ChatWindow({
       </div>
 
       {/* MESSAGES */}
-      <div
-        ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto"
-      >
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto">
         <div className="container mx-auto max-w-3xl space-y-3 px-4 py-6">
           {messages.length === 0 && (
             <div className="py-20 text-center">
@@ -396,6 +467,7 @@ export function ChatWindow({
             const showAvatar =
               !isMine && (!prevMsg || prevMsg.sender_id !== msg.sender_id);
             const isImage = msg.message_type === 'image' && msg.image_url;
+            const displayUrl = isImage ? getDisplayUrl(msg.image_url) : null;
 
             return (
               <motion.div
@@ -427,13 +499,19 @@ export function ChatWindow({
                 {isImage ? (
                   <div
                     className="group relative max-w-[60%] cursor-pointer overflow-hidden rounded-2xl border border-white/10"
-                    onClick={() => setPreviewImage(msg.image_url!)}
+                    onClick={() => displayUrl && setPreviewImage(displayUrl)}
                   >
-                    <img
-                      src={msg.image_url!}
-                      alt=""
-                      className="max-h-80 w-full object-cover transition group-hover:opacity-90"
-                    />
+                    {displayUrl ? (
+                      <img
+                        src={displayUrl}
+                        alt=""
+                        className="max-h-80 w-full object-cover transition group-hover:opacity-90"
+                      />
+                    ) : (
+                      <div className="flex h-40 w-60 items-center justify-center bg-white/5">
+                        <Loader2 className="h-6 w-6 animate-spin text-white/40" />
+                      </div>
+                    )}
                     <div className="absolute bottom-1 right-2 rounded bg-black/60 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur">
                       {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
                         hour: '2-digit',
@@ -524,7 +602,6 @@ export function ChatWindow({
 
       {/* INPUT */}
       <div className="relative border-t border-white/5 bg-[#0a0a0f]/95 backdrop-blur-xl">
-        {/* 🎯 Эмодзи-пикер */}
         <AnimatePresence>
           {showEmojiPicker && (
             <motion.div
@@ -575,8 +652,7 @@ export function ChatWindow({
               <Smile className="h-5 w-5" />
             </button>
 
-            <button
-              onClick={() => fileInputRef.current?.click()}
+            <button              onClick={() => fileInputRef.current?.click()}
               disabled={uploadingImage}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
               aria-label="Картинка"
@@ -624,7 +700,7 @@ export function ChatWindow({
         </div>
       </div>
 
-      {/* 🎯 Просмотр картинки */}
+      {/* Просмотр картинки */}
       <AnimatePresence>
         {previewImage && (
           <motion.div

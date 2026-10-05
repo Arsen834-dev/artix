@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ZoomIn, ZoomOut, Check } from 'lucide-react';
-
+import { useBodyScrollLock } from '@/lib/use-body-scroll-lock';
 type CropArea = {
   x: number;
   y: number;
@@ -85,7 +85,7 @@ export function ImageCropModal({
     null
   );
   const [isProcessing, setIsProcessing] = useState(false);
-
+  useBodyScrollLock(true);
   const onCropComplete = useCallback(
     (_croppedArea: CropArea, croppedAreaPixels: CropArea) => {
       setCroppedAreaPixels(croppedAreaPixels);

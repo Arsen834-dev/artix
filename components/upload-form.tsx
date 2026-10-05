@@ -1,3 +1,4 @@
+// components/upload-form.tsx
 'use client';
 
 import { useState, useRef, DragEvent, ChangeEvent } from 'react';
@@ -15,21 +16,7 @@ import {
   ShoppingBag,
   Briefcase,
 } from 'lucide-react';
-
-const CATEGORIES = [
-  { slug: 'portrait', label: 'Портреты' },
-  { slug: 'fantasy', label: 'Фэнтези' },
-  { slug: 'anime', label: 'Аниме' },
-  { slug: 'illustration', label: 'Иллюстрации' },
-  { slug: '3d', label: '3D' },
-  { slug: 'pixel', label: 'Пиксель-арт' },
-  { slug: 'scifi', label: 'Sci-Fi' },
-  { slug: 'concept', label: 'Концепт-арт' },
-  { slug: 'sketch', label: 'Скетчи' },
-  { slug: 'nature', label: 'Природа' },
-  { slug: 'architecture', label: 'Архитектура' },
-  { slug: 'other', label: 'Другое' },
-];
+import { CATEGORIES } from '@/lib/constants';
 
 type Tab = 'artwork' | 'service' | 'order';
 
@@ -45,7 +32,6 @@ export function UploadForm({
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Какие табы показывать
   const canPostArtwork = true;
   const canPostService = role === 'artist' || role === 'both';
   const canPostOrder = role === 'client' || role === 'both';
@@ -58,7 +44,6 @@ export function UploadForm({
 
   const [tab, setTab] = useState<Tab>(defaultTab);
 
-  // Общие поля
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -67,15 +52,11 @@ export function UploadForm({
   const [tags, setTags] = useState('');
   const [isDragging, setIsDragging] = useState(false);
 
-  // 🎯 Работа — БЕЗ цены (убрано)
-
-  // Услуга
   const [servicePrice, setServicePrice] = useState('');
   const [servicePriceType, setServicePriceType] = useState('from');
   const [servicePriceTo, setServicePriceTo] = useState('');
   const [deliveryDays, setDeliveryDays] = useState('3');
 
-  // Заказ
   const [budget, setBudget] = useState('');
   const [budgetType, setBudgetType] = useState('up_to');
   const [budgetTo, setBudgetTo] = useState('');
@@ -86,7 +67,6 @@ export function UploadForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // 🎯 Обработка файла
   const handleFile = (selectedFile: File) => {
     setError(null);
     if (!selectedFile.type.startsWith('image/')) {
@@ -124,7 +104,6 @@ export function UploadForm({
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // 🎯 Отправка
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -146,7 +125,6 @@ export function UploadForm({
     try {
       let publicUrl: string | null = null;
 
-      // Загружаем картинку
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${userId}/${Date.now()}.${fileExt}`;
@@ -177,7 +155,6 @@ export function UploadForm({
 
       let redirectPath = '';
 
-      // 🎯 ARTWORK — БЕЗ ЦЕНЫ
       if (tab === 'artwork') {
         const { data, error: insertError } = await supabase
           .from('artworks')
@@ -196,7 +173,6 @@ export function UploadForm({
         redirectPath = `/artwork/${data.id}`;
       }
 
-      // 🎯 SERVICE
       if (tab === 'service') {
         if (!servicePrice || parseInt(servicePrice) < 0) {
           throw new Error('Введи корректную цену');
@@ -226,7 +202,6 @@ export function UploadForm({
         redirectPath = `/service/${data.id}`;
       }
 
-      // 🎯 ORDER
       if (tab === 'order') {
         if (!budget || parseInt(budget) < 0) {
           throw new Error('Введи корректный бюджет');
@@ -252,7 +227,8 @@ export function UploadForm({
           .single();
 
         if (insertError) throw insertError;
-        redirectPath = `/order/${data.id}`;
+        // 🎯 FIX: /orders/[id], а не /order/[id]
+        redirectPath = `/orders/${data.id}`;
       }
 
       setProgress(100);
@@ -270,7 +246,6 @@ export function UploadForm({
     }
   };
 
-  // Успех
   if (success) {
     return (
       <motion.div
@@ -321,7 +296,6 @@ export function UploadForm({
       transition={{ duration: 0.6 }}
       className="mx-auto max-w-3xl"
     >
-      {/* Заголовок */}
       <div className="mb-10 text-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -339,7 +313,6 @@ export function UploadForm({
         </p>
       </div>
 
-      {/* ТАБЫ */}
       {tabs.length > 1 && (
         <div className="mb-8 flex justify-center gap-2">
           <div className="glass inline-flex gap-1 rounded-full p-1">
@@ -355,20 +328,14 @@ export function UploadForm({
                     setError(null);
                   }}
                   className={`relative flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-300 ${
-                    isActive
-                      ? 'text-white'
-                      : 'text-white/50 hover:text-white/80'
+                    isActive ? 'text-white' : 'text-white/50 hover:text-white/80'
                   }`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="tab-pill"
                       className="absolute inset-0 rounded-full bg-gradient-to-r from-[#6C63FF] to-[#B794F6] shadow-lg shadow-[#6C63FF]/30"
-                      transition={{
-                        type: 'spring',
-                        stiffness: 400,
-                        damping: 30,
-                      }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     />
                   )}
                   <span className="relative z-10 flex items-center gap-2">
@@ -382,12 +349,10 @@ export function UploadForm({
         </div>
       )}
 
-      {/* ФОРМА */}
       <form
         onSubmit={handleSubmit}
         className="space-y-6 rounded-3xl border border-white/10 bg-[#16161f]/60 p-8 backdrop-blur-xl"
       >
-        {/* ЗАГРУЗКА КАРТИНКИ */}
         <div>
           <label className="mb-3 block text-sm font-medium text-white/70">
             {tab === 'artwork' && 'Картинка работы *'}
@@ -459,7 +424,6 @@ export function UploadForm({
           </AnimatePresence>
         </div>
 
-        {/* НАЗВАНИЕ */}
         <div>
           <label
             htmlFor="title"
@@ -490,7 +454,6 @@ export function UploadForm({
           </div>
         </div>
 
-        {/* ОПИСАНИЕ */}
         <div>
           <label
             htmlFor="description"
@@ -516,7 +479,6 @@ export function UploadForm({
           </div>
         </div>
 
-        {/* КАТЕГОРИЯ */}
         <div>
           <label
             htmlFor="category"
@@ -530,7 +492,7 @@ export function UploadForm({
             onChange={(e) => setCategory(e.target.value)}
             className="w-full appearance-none rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white outline-none transition focus:border-[#6C63FF]/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-[#6C63FF]/20"
           >
-            {CATEGORIES.map((cat) => (
+            {CATEGORIES.filter((c) => c.slug !== 'all').map((cat) => (
               <option key={cat.slug} value={cat.slug} className="bg-[#16161f]">
                 {cat.label}
               </option>
@@ -538,9 +500,6 @@ export function UploadForm({
           </select>
         </div>
 
-        {/* 🎯 ARTWORK — БЕЗ ЦЕНЫ (блок удалён) */}
-
-        {/* SERVICE — цена + срок */}
         {tab === 'service' && (
           <>
             <div>
@@ -634,7 +593,6 @@ export function UploadForm({
           </>
         )}
 
-        {/* ORDER — бюджет + срок */}
         {tab === 'order' && (
           <>
             <div>
@@ -725,7 +683,6 @@ export function UploadForm({
           </>
         )}
 
-        {/* ТЕГИ */}
         <div>
           <label
             htmlFor="tags"
@@ -759,7 +716,6 @@ export function UploadForm({
           )}
         </div>
 
-        {/* ОШИБКА */}
         <AnimatePresence>
           {error && (
             <motion.div
@@ -773,7 +729,6 @@ export function UploadForm({
           )}
         </AnimatePresence>
 
-        {/* ПРОГРЕСС */}
         <AnimatePresence>
           {isLoading && (
             <motion.div
@@ -798,7 +753,6 @@ export function UploadForm({
           )}
         </AnimatePresence>
 
-        {/* КНОПКА */}
         <button
           type="submit"
           disabled={isLoading || (tab !== 'order' && !file)}

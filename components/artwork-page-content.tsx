@@ -1,3 +1,4 @@
+// components/artwork-page-content.tsx
 'use client';
 
 import Link from 'next/link';
@@ -5,21 +6,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Star, MessageCircle, Eye, Tag } from 'lucide-react';
 import { LikeButton } from './like-button';
 import { DeleteButton } from './delete-button';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  portrait: 'Портреты',
-  fantasy: 'Фэнтези',
-  anime: 'Аниме',
-  illustration: 'Иллюстрации',
-  '3d': '3D',
-  pixel: 'Пиксель-арт',
-  scifi: 'Sci-Fi',
-  concept: 'Концепт-арт',
-  sketch: 'Скетчи',
-  nature: 'Природа',
-  architecture: 'Архитектура',
-  other: 'Другое',
-};
+import { getCategoryLabel } from '@/lib/constants';
 
 type Artwork = {
   id: number;
@@ -144,7 +131,7 @@ export function ArtworkPageContent({
         <div className="space-y-6">
           <div className="flex flex-wrap items-center gap-2">
             <span className="glass rounded-full px-3 py-1 text-xs font-medium text-white/90">
-              {CATEGORY_LABELS[artwork.category]}
+              {getCategoryLabel(artwork.category)}
             </span>
             {artwork.artist.is_sponsor && (
               <span className="flex items-center gap-1 rounded-full bg-yellow-400/95 px-3 py-1 text-xs font-medium text-black">
@@ -227,7 +214,6 @@ export function ArtworkPageContent({
             )}
           </div>
 
-          {/* 🎯 КНОПКА УДАЛЕНИЯ — только для автора */}
           {isOwner && (
             <DeleteButton
               table="artworks"

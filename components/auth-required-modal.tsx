@@ -1,3 +1,4 @@
+// components/auth-required-modal.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -5,6 +6,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, LogIn, UserPlus } from 'lucide-react';
+import { useBodyScrollLock } from '@/lib/use-body-scroll-lock';
 
 export function AuthRequiredModal({
   onClose,
@@ -15,13 +17,10 @@ export function AuthRequiredModal({
 }) {
   const [mounted, setMounted] = useState(false);
 
+  useBodyScrollLock(true);
+
   useEffect(() => {
     setMounted(true);
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, []);
 
   if (!mounted) return null;
@@ -44,10 +43,8 @@ export function AuthRequiredModal({
           onClick={(e) => e.stopPropagation()}
           className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-[#6C63FF]/30 bg-gradient-to-b from-[#1a1620] to-[#0f0d14] p-8"
         >
-          {/* Свечение */}
           <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#6C63FF]/40 blur-[100px]" />
 
-          {/* Кнопка закрытия */}
           <button
             onClick={onClose}
             className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
@@ -55,12 +52,10 @@ export function AuthRequiredModal({
             <X className="h-4 w-4" />
           </button>
 
-          {/* Иконка */}
           <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] shadow-2xl shadow-[#6C63FF]/40">
             <Sparkles className="h-8 w-8 text-white" />
           </div>
 
-          {/* Заголовок */}
           <h2 className="display-title text-center text-2xl font-bold text-white">
             Требуется <span className="gradient-text">вход</span>
           </h2>
@@ -69,7 +64,6 @@ export function AuthRequiredModal({
             займёт 30 секунд.
           </p>
 
-          {/* Кнопки */}
           <div className="mt-6 space-y-3">
             <Link
               href="/auth/login"
@@ -97,6 +91,6 @@ export function AuthRequiredModal({
         </motion.div>
       </motion.div>
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }

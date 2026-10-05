@@ -1,16 +1,31 @@
+// components/custom-cursor.tsx
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const trailRef = useRef<HTMLDivElement>(null);
+  const [enabled, setEnabled] = useState(false);
 
   const mousePos = useRef({ x: 0, y: 0 });
   const trailPos = useRef({ x: 0, y: 0 });
   const isHovering = useRef(false);
 
+  // 🎯 Рендерим только на устройствах с точным указателем (мышь/трекпад)
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(pointer: fine)');
+    setEnabled(mq.matches);
+
+    const handler = (e: MediaQueryListEvent) => setEnabled(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       mousePos.current = { x: e.clientX, y: e.clientY };
 
@@ -21,9 +36,11 @@ export function CustomCursor() {
 
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) return;
+
     let animationId: number;
 
     const animate = () => {
@@ -47,7 +64,9 @@ export function CustomCursor() {
     animate();
 
     return () => cancelAnimationFrame(animationId);
-  }, []);
+  }, [enabled]);
+
+  if (!enabled) return null;
 
   return (
     <>

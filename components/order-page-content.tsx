@@ -1,3 +1,4 @@
+// components/order-page-content.tsx
 'use client';
 
 import Link from 'next/link';
@@ -19,21 +20,11 @@ import { DeleteButton } from './delete-button';
 import { ResponseModal } from './response-modal';
 import { useRequireAuth } from './auth-provider';
 import { StartChatButton } from './start-chat-button';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  portrait: 'Портреты',
-  fantasy: 'Фэнтези',
-  anime: 'Аниме',
-  illustration: 'Иллюстрации',
-  '3d': '3D',
-  pixel: 'Пиксель-арт',
-  scifi: 'Sci-Fi',
-  concept: 'Концепт-арт',
-  sketch: 'Скетчи',
-  nature: 'Природа',
-  architecture: 'Архитектура',
-  other: 'Другое',
-};
+import {
+  getCategoryLabel,
+  formatOrderBudget,
+  formatDelivery,
+} from '@/lib/constants';
 
 type Order = {
   id: number;
@@ -75,23 +66,6 @@ type Response = {
     is_sponsor: boolean;
   };
 };
-
-function formatBudget(order: Order): string {
-  if (order.budget_type === 'up_to') {
-    return `до ${order.budget.toLocaleString('ru-RU')}₽`;
-  }
-  if (order.budget_type === 'range' && order.budget_to) {
-    return `${order.budget.toLocaleString('ru-RU')}–${order.budget_to.toLocaleString('ru-RU')}₽`;
-  }
-  return `${order.budget.toLocaleString('ru-RU')}₽`;
-}
-
-function formatDeadline(days: number | null): string {
-  if (!days) return 'Не указан';
-  if (days === 1) return '1 день';
-  if (days < 5) return `${days} дня`;
-  return `${days} дней`;
-}
 
 export function OrderPageContent({
   order,
@@ -138,7 +112,7 @@ export function OrderPageContent({
           <div className="lg:col-span-2">
             <div className="mb-6 flex flex-wrap items-center gap-2">
               <span className="glass rounded-full px-3 py-1 text-xs font-medium text-white/90">
-                {CATEGORY_LABELS[order.category] || order.category}
+                {getCategoryLabel(order.category)}
               </span>
               <span className="flex items-center gap-1.5 rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" />
@@ -205,7 +179,6 @@ export function OrderPageContent({
               </div>
             )}
 
-            {/* 🎯 ОТКЛИКИ */}
             {responses.length > 0 && (
               <div className="mt-12">
                 <h3 className="display-title mb-6 text-2xl font-bold text-white">
@@ -226,7 +199,6 @@ export function OrderPageContent({
                             : 'border-white/10 bg-[#16161f]/60 hover:border-[#4FD1C5]/30'
                       }`}
                     >
-                      {/* Автор */}
                       <div className="flex items-start gap-3">
                         <Link
                           href={`/artist/${response.artist.username}`}
@@ -265,12 +237,10 @@ export function OrderPageContent({
                         )}
                       </div>
 
-                      {/* Сообщение */}
                       <p className="mt-4 whitespace-pre-wrap text-sm text-white/70">
                         {response.message}
                       </p>
 
-                      {/* Цена + срок */}
                       <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-4">
                         <div>
                           <div className="text-xs text-white/40">Цена</div>
@@ -281,12 +251,11 @@ export function OrderPageContent({
                         <div className="text-right">
                           <div className="text-xs text-white/40">Срок</div>
                           <div className="font-medium text-white">
-                            {formatDeadline(response.delivery_days)}
+                            {formatDelivery(response.delivery_days)}
                           </div>
                         </div>
                       </div>
 
-                      {/* Действия — для заказчика */}
                       {isOwner && response.status === 'pending' && (
                         <div className="mt-4 flex gap-2">
                           <StartChatButton
@@ -305,22 +274,20 @@ export function OrderPageContent({
             )}
           </div>
 
-          {/* Правая колонка */}
           <div className="space-y-6">
             <div className="rounded-2xl border border-white/10 bg-[#16161f]/60 p-6 backdrop-blur-sm">
               <div className="text-xs uppercase tracking-wider text-white/40">
                 Бюджет
               </div>
               <div className="mt-1 text-4xl font-bold text-[#4FD1C5]">
-                {formatBudget(order)}
+                {formatOrderBudget(order)}
               </div>
 
               <div className="mt-4 flex items-center gap-2 text-sm text-white/60">
                 <Clock className="h-4 w-4 text-[#4FD1C5]" />
-                Срок: {formatDeadline(order.deadline_days)}
+                Срок: {formatDelivery(order.deadline_days)}
               </div>
 
-              {/* Кнопка «Откликнуться» — только для художников, не владельца */}
               {!isOwner && !hasResponded && (
                 <button
                   onClick={handleRespond}

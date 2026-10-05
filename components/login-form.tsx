@@ -1,3 +1,4 @@
+// components/login-form.tsx
 'use client';
 
 import { cn } from '@/lib/utils';
@@ -7,10 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Mail } from 'lucide-react';
 import { PasswordInput } from '@/components/password-input';
+import { useUser } from '@/components/auth-provider';
 
 export function LoginForm({
   className,
@@ -21,6 +23,14 @@ export function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const user = useUser();
+
+  // 🎯 Если уже залогинен — на /feed
+  useEffect(() => {
+    if (user) {
+      router.replace('/feed');
+    }
+  }, [user, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,18 +48,18 @@ export function LoginForm({
 
       // 🎯 Проверяем подтверждение почты
       if (data.user && !data.user.email_confirmed_at) {
-        // Выходим — не даём доступ
         await supabase.auth.signOut();
         setError(
           '⚠️ Подтверди почту! Мы отправили письмо на ' +
             email +
-            '. Проверь папку «Спам».'
+            '. Проверь папку «Спам».',
         );
         setIsLoading(false);
         return;
       }
 
       if (data.session) {
+        // 🎯 Полная перезагрузка, чтобы AuthProvider получил свежий user
         window.location.href = '/feed';
       } else {
         setError('Не удалось создать сессию');
@@ -69,12 +79,10 @@ export function LoginForm({
         transition={{ duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] }}
         className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0f]/80 p-8 backdrop-blur-2xl"
       >
-        {/* Туманности */}
         <div className="pointer-events-none absolute -left-20 -top-20 h-48 w-48 rounded-full bg-[#6C63FF]/20 blur-[80px]" />
         <div className="pointer-events-none absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-[#4FD1C5]/15 blur-[80px]" />
 
         <div className="relative">
-          {/* Заголовок */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -88,15 +96,13 @@ export function LoginForm({
               </div>
             </div>
             <h1 className="display-title text-3xl font-bold text-white">
-              С возвращением в{' '}
-              <span className="gradient-text">Artix</span>
+              С возвращением в <span className="gradient-text">Artix</span>
             </h1>
             <p className="mt-2 text-sm text-white/50">
               Войди, чтобы продолжить
             </p>
           </motion.div>
 
-          {/* Форма */}
           <form onSubmit={handleLogin} className="space-y-6">
             {/* EMAIL */}
             <motion.div
@@ -169,7 +175,7 @@ export function LoginForm({
                 {error}
               </motion.div>
             )}
-            
+
             {/* КНОПКА */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}

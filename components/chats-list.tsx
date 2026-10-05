@@ -1,8 +1,10 @@
+// components/chats-list.tsx
 'use client';
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { MessageCircle, Star, Check, CheckCheck } from 'lucide-react';
+import { timeAgo } from '@/lib/constants';
 
 type Chat = {
   id: number;
@@ -19,25 +21,6 @@ type Chat = {
   last_sender_id?: string | null;
   is_read?: boolean;
 };
-
-function timeAgo(dateString: string | null): string {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffH = Math.floor(diffMs / 3600000);
-  const diffD = Math.floor(diffMs / 86400000);
-
-  if (diffMin < 1) return 'сейчас';
-  if (diffMin < 60) return `${diffMin} мин`;
-  if (diffH < 24) return `${diffH} ч`;
-  if (diffD < 7) return `${diffD} дн`;
-  return date.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'short',
-  });
-}
 
 export function ChatsList({
   chats,
@@ -76,13 +59,12 @@ export function ChatsList({
           >
             <Link href={`/chat/${chat.id}`}>
               <div
-                className={`group flex items-center gap-4 rounded-2xl border p-4 backdrop-blur-sm transition-all hover:-translate-y-0.5 ${
+                className={`group relative flex items-center gap-4 rounded-2xl border p-4 backdrop-blur-sm transition-all hover:-translate-y-0.5 ${
                   hasUnread
                     ? 'border-[#6C63FF]/40 bg-[#6C63FF]/5 hover:border-[#6C63FF]/60 hover:bg-[#6C63FF]/10'
                     : 'border-white/5 bg-[#16161f]/40 hover:border-white/10 hover:bg-[#16161f]/60'
                 }`}
               >
-                {/* Аватар */}
                 <div className="relative shrink-0">
                   {chat.other.avatar_url ? (
                     <img
@@ -98,7 +80,6 @@ export function ChatsList({
                     </div>
                   )}
 
-                  {/* 🎯 Индикатор непрочитанных */}
                   {hasUnread && (
                     <motion.div
                       initial={{ scale: 0 }}
@@ -110,7 +91,6 @@ export function ChatsList({
                   )}
                 </div>
 
-                {/* Инфо */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-1.5">
@@ -137,7 +117,6 @@ export function ChatsList({
                   </div>
 
                   <div className="mt-1 flex items-center gap-1.5">
-                    {/* 🎯 Галочки «прочитано» — если последнее сообщение моё */}
                     {isMineLast && (
                       <span className="shrink-0">
                         {isReadByOther ? (
@@ -160,7 +139,6 @@ export function ChatsList({
                   </div>
                 </div>
 
-                {/* 🎯 Синяя полоска слева для непрочитанных */}
                 {hasUnread && (
                   <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[#6C63FF] to-[#B794F6]" />
                 )}

@@ -1,21 +1,8 @@
+// app/orders/page.tsx
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { OrdersGrid } from '@/components/orders-grid';
-
-const CATEGORIES = [
-  { slug: 'all', label: 'Все' },
-  { slug: 'portrait', label: 'Портреты' },
-  { slug: 'fantasy', label: 'Фэнтези' },
-  { slug: 'anime', label: 'Аниме' },
-  { slug: 'illustration', label: 'Иллюстрации' },
-  { slug: '3d', label: '3D' },
-  { slug: 'pixel', label: 'Пиксель-арт' },
-  { slug: 'scifi', label: 'Sci-Fi' },
-  { slug: 'concept', label: 'Концепт-арт' },
-  { slug: 'sketch', label: 'Скетчи' },
-  { slug: 'nature', label: 'Природа' },
-  { slug: 'other', label: 'Другое' },
-];
+import { CATEGORIES } from '@/lib/constants';
 
 async function OrdersContent({
   searchParams,
@@ -89,7 +76,9 @@ async function CategoryFilters({
             return (
               <a
                 key={cat.slug}
-                href={cat.slug === 'all' ? '/orders' : `/orders?category=${cat.slug}`}
+                href={
+                  cat.slug === 'all' ? '/orders' : `/orders?category=${cat.slug}`
+                }
                 className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
                   isActive
                     ? 'bg-gradient-to-r from-[#4FD1C5] to-[#68D391] text-white shadow-lg shadow-[#4FD1C5]/30'
@@ -122,7 +111,10 @@ function FiltersSkeleton() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-9 w-24 animate-pulse rounded-full bg-white/5" />
+            <div
+              key={i}
+              className="h-9 w-24 animate-pulse rounded-full bg-white/5"
+            />
           ))}
         </div>
       </div>
@@ -141,7 +133,6 @@ export default function OrdersPage({
         <CategoryFilters searchParams={searchParams} />
       </Suspense>
 
-      {/* Заголовок */}
       <div className="container mx-auto px-4 pb-8 pt-12">
         <h1 className="display-title text-5xl font-bold md:text-7xl">
           <span className="text-[#4FD1C5]">Заказы</span>{' '}
@@ -152,7 +143,6 @@ export default function OrdersPage({
         </p>
       </div>
 
-      {/* Лента */}
       <div className="container mx-auto px-4 pb-16">
         <Suspense fallback={<OrdersSkeleton />}>
           <OrdersContent searchParams={searchParams} />

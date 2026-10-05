@@ -1,3 +1,4 @@
+// components/loader.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -5,33 +6,58 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 type MatterType = typeof import('matter-js');
 
-const COLORS = ['#6C63FF', '#B794F6', '#4FD1C5', '#F6AD55', '#C9A6FF', '#F687B3', '#68D391', '#FBD38D'];
+const COLORS = [
+  '#6C63FF',
+  '#B794F6',
+  '#4FD1C5',
+  '#F6AD55',
+  '#C9A6FF',
+  '#F687B3',
+  '#68D391',
+  '#FBD38D',
+];
 
 export function Loader({ onComplete }: { onComplete: () => void }) {
   const sceneRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const [isDone, setIsDone] = useState(false);
   const [Matter, setMatter] = useState<MatterType | null>(null);
+  const completedRef = useRef(false);
 
-  // Прогресс 0 → 100
+  // 🎯 Прогресс 0 → 100
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          setTimeout(() => {
-            setIsDone(true);
-            setTimeout(onComplete, 900);
-          }, 500);
           return 100;
         }
         return Math.min(prev + Math.random() * 6 + 1.5, 100);
       });
     }, 100);
     return () => clearInterval(interval);
-  }, [onComplete]);
+  }, []);
 
-  // Динамическая загрузка Matter.js
+  // 🎯 Когда progress достиг 100 — запускаем завершение (один раз)
+  useEffect(() => {
+    if (progress < 100 || completedRef.current) return;
+    completedRef.current = true;
+
+    // 🎯 FIX: сначала сообщаем HomeContent, что мы готовы,
+    // чтобы hero смонтировался ПОД лоадером (без мигания пустоты).
+    const t1 = setTimeout(() => {
+      onComplete();
+      // Небольшая задержка — даём hero отрендериться под лоадером
+      const t2 = setTimeout(() => {
+        setIsDone(true);
+      }, 150);
+      return () => clearTimeout(t2);
+    }, 400);
+
+    return () => clearTimeout(t1);
+  }, [progress, onComplete]);
+
+  // 🎯 Динамическая загрузка Matter.js
   useEffect(() => {
     let mounted = true;
     import('matter-js').then((mod) => {
@@ -42,7 +68,7 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
     };
   }, []);
 
-  // Физика
+  // 🎯 Физика
   useEffect(() => {
     if (!Matter || !sceneRef.current || isDone) return;
 
@@ -50,7 +76,7 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
     const height = window.innerHeight;
 
     const engine = Matter.Engine.create();
-    engine.gravity.y = 5; // ⚡ быстрое падение
+    engine.gravity.y = 5;
 
     const render = Matter.Render.create({
       element: sceneRef.current,
@@ -64,7 +90,6 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
       },
     });
 
-    // Стены
     const walls = [
       Matter.Bodies.rectangle(width / 2, height + 100, width, 200, {
         isStatic: true,
@@ -81,9 +106,8 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
     ];
     Matter.Composite.add(engine.world, walls);
 
-    // Создание объекта
     const createBody = (x: number, y: number) => {
-      const size = 100 + Math.random() * 400; // 100-250px
+      const size = 100 + Math.random() * 400;
       const isCircle = Math.random() > 0.5;
       const color = COLORS[Math.floor(Math.random() * COLORS.length)];
       const shapeIndex = Math.floor(Math.random() * 8);
@@ -110,15 +134,13 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
       return body;
     };
 
-    // Спавн
-// Спавн — ЧАЩЕ
     const spawnInterval = setInterval(() => {
-    const x = Math.random() * (width - 800) + 400;
-    const y = -600;
-    const body = createBody(x, y);
-    Matter.Composite.add(engine.world, body);
-    }, 150); // было 400
-    // Кастомный рендер — ОБЪЕКТЫ ПОВЕРХ ПРОЦЕНТОВ
+      const x = Math.random() * (width - 800) + 400;
+      const y = -600;
+      const body = createBody(x, y);
+      Matter.Composite.add(engine.world, body);
+    }, 150);
+
     const afterRenderHandler = () => {
       const ctx = render.context;
       const bodies = Matter.Composite.allBodies(engine.world) as any[];
@@ -135,7 +157,6 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
         ctx.fillStyle = color;
         const half = size / 2;
 
-        // Более интересные формы с деталями
         switch (shapeIndex) {
           case 0: // Планета с кольцом
             ctx.beginPath();
@@ -148,7 +169,6 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
             ctx.ellipse(0, 0, half * 1.15, half * 0.3, -0.3, 0, Math.PI * 2);
             ctx.stroke();
             ctx.globalAlpha = 1;
-            // Пятна на планете
             ctx.fillStyle = 'rgba(0,0,0,0.15)';
             ctx.beginPath();
             ctx.arc(half * 0.3, -half * 0.2, half * 0.25, 0, Math.PI * 2);
@@ -167,12 +187,10 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
             ctx.lineTo(-half * 0.5, -half * 0.3);
             ctx.closePath();
             ctx.fill();
-            // Иллюминатор
             ctx.fillStyle = 'rgba(0,0,0,0.4)';
             ctx.beginPath();
             ctx.arc(0, -half * 0.3, half * 0.15, 0, Math.PI * 2);
             ctx.fill();
-            // Пламя
             ctx.fillStyle = '#F6AD55';
             ctx.beginPath();
             ctx.moveTo(-half * 0.3, half);
@@ -193,7 +211,6 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
             }
             ctx.closePath();
             ctx.fill();
-            // Центр
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
             ctx.beginPath();
             ctx.arc(0, 0, half * 0.2, 0, Math.PI * 2);
@@ -203,7 +220,6 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
             ctx.beginPath();
             ctx.arc(0, 0, half, 0, Math.PI * 2);
             ctx.fill();
-            // Кратеры
             ctx.fillStyle = 'rgba(0,0,0,0.2)';
             ctx.beginPath();
             ctx.arc(-half * 0.3, -half * 0.2, half * 0.2, 0, Math.PI * 2);
@@ -232,14 +248,12 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
             ctx.beginPath();
             ctx.arc(0, 0, half * 0.7, 0, Math.PI * 2);
             ctx.fill();
-            // Кольцо
             ctx.globalAlpha = 0.7;
             ctx.beginPath();
             ctx.ellipse(0, 0, half * 1.15, half * 0.25, -0.2, 0, Math.PI * 2);
             ctx.strokeStyle = color;
             ctx.lineWidth = 6;
             ctx.stroke();
-            // Второе кольцо
             ctx.globalAlpha = 0.4;
             ctx.beginPath();
             ctx.ellipse(0, 0, half * 1.3, half * 0.3, -0.2, 0, Math.PI * 2);
@@ -259,7 +273,6 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
             }
             ctx.closePath();
             ctx.fill();
-            // Дырки
             ctx.fillStyle = 'rgba(0,0,0,0.25)';
             ctx.beginPath();
             ctx.arc(-half * 0.2, -half * 0.1, half * 0.15, 0, Math.PI * 2);
@@ -269,18 +282,15 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
             ctx.fill();
             break;
           case 7: // НЛО
-            // Основание
             ctx.beginPath();
             ctx.ellipse(0, half * 0.1, half, half * 0.35, 0, 0, Math.PI * 2);
             ctx.fill();
-            // Купол
             ctx.globalAlpha = 0.9;
             ctx.beginPath();
             ctx.moveTo(-half * 0.6, 0);
             ctx.quadraticCurveTo(0, -half * 0.8, half * 0.6, 0);
             ctx.closePath();
             ctx.fill();
-            // Огни
             ctx.globalAlpha = 1;
             ctx.fillStyle = '#FBD38D';
             ctx.beginPath();
@@ -324,7 +334,6 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
           transition={{ duration: 1.8, ease: 'easeInOut' }}
           className="fixed inset-0 z-[9999] overflow-hidden bg-[#0a0a0f]"
         >
-            {/* 🔽 ПРОЦЕНТЫ СЗАДИ (z-0) */}
           <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.7 }}
@@ -361,7 +370,6 @@ export function Loader({ onComplete }: { onComplete: () => void }) {
             </motion.div>
           </div>
 
-          {/* 🔼 ОБЪЕКТЫ СПЕРЕДИ (z-10) — закрывают проценты при падении */}
           <div ref={sceneRef} className="absolute inset-0 z-10" />
         </motion.div>
       )}

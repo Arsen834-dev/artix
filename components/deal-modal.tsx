@@ -1,5 +1,6 @@
+// components/deal-modal.tsx
 'use client';
-
+import { useBodyScrollLock } from '@/lib/use-body-scroll-lock';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
@@ -7,7 +8,6 @@ import { useRouter } from 'next/navigation';
 import {
   X,
   DollarSign,
-  Clock,
   Shield,
   Info,
   Loader2,
@@ -23,8 +23,8 @@ type DealModalProps = {
   defaultTitle?: string;
   onClose: () => void;
 };
-
-const COMMISSION_PERCENT = 5; // комиссия платформы
+useBodyScrollLock(true);
+const COMMISSION_PERCENT = 5;
 
 export function DealModal({
   artistId,
@@ -97,7 +97,8 @@ export function DealModal({
 
       setSuccess(true);
       setTimeout(() => {
-        router.push(`/deal/${data.id}`);
+        // 🎯 FIX: путь /deals/[id], а не /deal/[id]
+        router.push(`/deals/${data.id}`);
       }, 1500);
     } catch (err: any) {
       console.error(err);
@@ -154,15 +155,12 @@ export function DealModal({
           onClick={(e) => e.stopPropagation()}
           className="relative z-10 w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-[#16161f]"
         >
-          {/* Заголовок */}
           <div className="flex items-center justify-between border-b border-white/5 p-6">
             <div>
               <h2 className="display-title text-xl font-bold text-white">
                 Создать сделку
               </h2>
-              <p className="mt-1 text-sm text-white/50">
-                с {artistName}
-              </p>
+              <p className="mt-1 text-sm text-white/50">с {artistName}</p>
             </div>
             <button
               onClick={onClose}
@@ -173,7 +171,6 @@ export function DealModal({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5 p-6">
-            {/* Название */}
             <div>
               <label className="mb-2 block text-sm font-medium text-white/70">
                 Название сделки *
@@ -189,7 +186,6 @@ export function DealModal({
               />
             </div>
 
-            {/* Описание */}
             <div>
               <label className="mb-2 block text-sm font-medium text-white/70">
                 Описание
@@ -204,7 +200,6 @@ export function DealModal({
               />
             </div>
 
-            {/* Сумма */}
             <div>
               <label className="mb-2 block text-sm font-medium text-white/70">
                 Сумма сделки (₽) *
@@ -223,7 +218,6 @@ export function DealModal({
               </div>
             </div>
 
-            {/* Расчёт */}
             <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-white/60">Сумма сделки</span>
@@ -252,7 +246,6 @@ export function DealModal({
               </div>
             </div>
 
-            {/* Инфо */}
             <div className="flex gap-3 rounded-2xl border border-[#6C63FF]/20 bg-[#6C63FF]/5 p-4">
               <Shield className="h-5 w-5 shrink-0 text-[#B794F6]" />
               <div className="text-xs leading-relaxed text-white/70">
@@ -265,14 +258,12 @@ export function DealModal({
               </div>
             </div>
 
-            {/* Ошибка */}
             {error && (
               <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">
                 {error}
               </div>
             )}
 
-            {/* Кнопка */}
             <button
               type="submit"
               disabled={isLoading || amountNum < 500}

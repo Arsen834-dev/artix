@@ -1,3 +1,4 @@
+// components/sign-up-form.tsx
 'use client';
 
 import { cn } from '@/lib/utils';
@@ -10,15 +11,18 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Palette, ShoppingBag, Sparkles, Mail, Check } from 'lucide-react';
+import { Palette, ShoppingBag, Sparkles, Mail, AtSign, Check } from 'lucide-react';
 
 type Role = 'artist' | 'client' | 'both';
+
+const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/;
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
   const [role, setRole] = useState<Role>('artist');
@@ -26,11 +30,23 @@ export function SignUpForm({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  const usernameValid = USERNAME_REGEX.test(username);
+  const usernameTouched = username.length > 0;
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
+
+    // 🎯 Валидация username
+    if (!usernameValid) {
+      setError(
+        'Username: 3–20 символов, только латиница в нижнем регистре, цифры и _.',
+      );
+      setIsLoading(false);
+      return;
+    }
 
     // 🎯 Проверка сложности пароля
     const strength = checkPasswordStrength(password);
@@ -53,18 +69,19 @@ export function SignUpForm({
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
+            username,
             role,
-            display_name: email.split('@')[0],
+            display_name: username,
           },
         },
       });
 
       if (error) throw error;
 
-      if (role === 'artist') {
-        router.push('/auth/sign-up-success?role=artist');
-      } else {
+      if (role === 'client') {
         router.push('/auth/sign-up-success?role=client');
+      } else {
+        router.push('/auth/sign-up-success?role=artist');
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'Произошла ошибка');
@@ -81,12 +98,10 @@ export function SignUpForm({
         transition={{ duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] }}
         className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0f]/80 p-8 backdrop-blur-2xl"
       >
-        {/* Туманности */}
         <div className="pointer-events-none absolute -left-20 -top-20 h-48 w-48 rounded-full bg-[#6C63FF]/20 blur-[80px]" />
         <div className="pointer-events-none absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-[#4FD1C5]/15 blur-[80px]" />
 
         <div className="relative">
-          {/* Заголовок */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -100,15 +115,13 @@ export function SignUpForm({
               </div>
             </div>
             <h1 className="display-title text-3xl font-bold text-white">
-              Присоединяйся к{' '}
-              <span className="gradient-text">галактике</span>
+              Присоединяйся к <span className="gradient-text">галактике</span>
             </h1>
             <p className="mt-2 text-sm text-white/50">
               Создай аккаунт за 30 секунд
             </p>
           </motion.div>
 
-          {/* Форма */}
           <form onSubmit={handleSignUp} className="space-y-6">
             {/* ВЫБОР РОЛИ */}
             <motion.div
@@ -119,8 +132,7 @@ export function SignUpForm({
               <Label className="mb-3 block text-sm font-medium text-white/70">
                 Я регистрируюсь как:
               </Label>
-                            <div className="grid grid-cols-3 gap-2">
-                {/* ХУДОЖНИК */}
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setRole('artist')}
@@ -152,7 +164,6 @@ export function SignUpForm({
                   </div>
                 </button>
 
-                {/* ЗАКАЗЧИК */}
                 <button
                   type="button"
                   onClick={() => setRole('client')}
@@ -184,7 +195,6 @@ export function SignUpForm({
                   </div>
                 </button>
 
-                {/* ОБА */}
                 <button
                   type="button"
                   onClick={() => setRole('both')}
@@ -208,9 +218,7 @@ export function SignUpForm({
                       role === 'both' ? 'text-yellow-400' : 'text-white/40'
                     }`}
                   />
-                  <div className="text-sm font-semibold text-white">
-                    Оба
-                  </div>
+                  <div className="text-sm font-semibold text-white">Оба</div>
                   <div className="mt-0.5 text-[10px] leading-tight text-white/40">
                     И то, и то
                   </div>
@@ -245,7 +253,48 @@ export function SignUpForm({
               </div>
             </motion.div>
 
-            {/* ПАРОЛЬ с индикатором */}
+            {/* USERNAME */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.35 }}
+              className="grid gap-2"
+            >
+              <Label
+                htmlFor="username"
+                className="text-sm font-medium text-white/70"
+              >
+                Username
+              </Label>
+              <div className="relative">
+                <AtSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="artix_artist"
+                  required
+                  value={username}
+                  onChange={(e) =>
+                    setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))
+                  }
+                  className={`border-white/10 bg-white/[0.03] pl-10 text-white placeholder:text-white/30 focus:ring-[#6C63FF]/20 ${
+                    usernameTouched && !usernameValid
+                      ? 'border-red-500/40 focus:border-red-500/50'
+                      : 'focus:border-[#6C63FF]/50'
+                  }`}
+                />
+              </div>
+              {usernameTouched && !usernameValid && (
+                <p className="text-xs text-red-400">
+                  3–20 символов: a-z, 0-9, _
+                </p>
+              )}
+              {usernameValid && (
+                <p className="text-xs text-green-400">@{username}</p>
+              )}
+            </motion.div>
+
+            {/* ПАРОЛЬ */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -288,7 +337,6 @@ export function SignUpForm({
                 placeholder="Ещё раз"
                 required
               />
-              {/* Индикатор совпадения */}
               {repeatPassword.length > 0 && (
                 <div
                   className={`flex items-center gap-1.5 text-xs ${
@@ -343,7 +391,7 @@ export function SignUpForm({
             >
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !usernameValid}
                 className="group relative w-full overflow-hidden rounded-full border border-white/10 bg-white px-6 py-6 font-semibold text-black shadow-2xl shadow-white/10 transition-all duration-500 hover:scale-[1.02] disabled:opacity-50"
               >
                 <span className="relative z-10 transition-colors duration-500 group-hover:text-white">
@@ -354,7 +402,7 @@ export function SignUpForm({
                       : role === 'client'
                         ? 'Создать аккаунт заказчика'
                         : 'Создать универсальный аккаунт'}
-                  </span>
+                </span>
                 <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-[#6C63FF] to-[#B794F6] transition-transform duration-500 group-hover:translate-x-0" />
               </Button>
             </motion.div>

@@ -1,8 +1,15 @@
+// components/orders-grid.tsx
 'use client';
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Star, Clock, MessageCircle, Users, AlertCircle } from 'lucide-react';
+import { Star, Clock, MessageCircle, Users } from 'lucide-react';
+import {
+  getCategoryLabel,
+  formatOrderBudget,
+  formatDeliveryShort,
+  timeAgoFull,
+} from '@/lib/constants';
 
 type Order = {
   id: number;
@@ -26,51 +33,6 @@ type Order = {
   };
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  portrait: 'Портреты',
-  fantasy: 'Фэнтези',
-  anime: 'Аниме',
-  illustration: 'Иллюстрации',
-  '3d': '3D',
-  pixel: 'Пиксель-арт',
-  scifi: 'Sci-Fi',
-  concept: 'Концепт-арт',
-  sketch: 'Скетчи',
-  nature: 'Природа',
-  other: 'Другое',
-};
-
-function formatBudget(order: Order): string {
-  if (order.budget_type === 'up_to') {
-    return `до ${order.budget.toLocaleString('ru-RU')}₽`;
-  }
-  if (order.budget_type === 'range' && order.budget_to) {
-    return `${order.budget.toLocaleString('ru-RU')}–${order.budget_to.toLocaleString('ru-RU')}₽`;
-  }
-  return `${order.budget.toLocaleString('ru-RU')}₽`;
-}
-
-function formatDeadline(days: number | null): string | null {
-  if (!days) return null;
-  if (days === 1) return '1 день';
-  if (days < 5) return `${days} дня`;
-  return `${days} дней`;
-}
-
-function timeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-
-  if (diffMinutes < 60) return `${diffMinutes} мин назад`;
-  if (diffHours < 24) return `${diffHours} ч назад`;
-  if (diffDays < 7) return `${diffDays} дн назад`;
-  return date.toLocaleDateString('ru-RU');
-}
-
 export function OrdersGrid({ orders }: { orders: Order[] }) {
   if (orders.length === 0) {
     return (
@@ -87,7 +49,7 @@ export function OrdersGrid({ orders }: { orders: Order[] }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {orders.map((order, i) => {
-        const deadline = formatDeadline(order.deadline_days);
+        const deadline = formatDeliveryShort(order.deadline_days);
 
         return (
           <motion.div
@@ -99,40 +61,34 @@ export function OrdersGrid({ orders }: { orders: Order[] }) {
           >
             <Link href={`/orders/${order.id}`}>
               <div className="group relative h-full overflow-hidden rounded-3xl border border-white/5 bg-[#16161f]/60 p-6 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-[#4FD1C5]/40 hover:shadow-2xl hover:shadow-[#4FD1C5]/20">
-                {/* Свечение при hover */}
                 <div className="pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full bg-[#4FD1C5]/20 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
 
                 <div className="relative">
-                  {/* Верхняя строка: категория + время */}
                   <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="glass rounded-full px-3 py-1 text-xs font-medium text-white/90">
-                        {CATEGORY_LABELS[order.category] || order.category}
+                        {getCategoryLabel(order.category)}
                       </span>
-                      {/* Статус */}
                       <span className="flex items-center gap-1 rounded-full bg-green-500/20 px-2.5 py-1 text-xs font-medium text-green-400">
                         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" />
                         Открыт
                       </span>
                     </div>
                     <span className="text-xs text-white/30">
-                      {timeAgo(order.created_at)}
+                      {timeAgoFull(order.created_at)}
                     </span>
                   </div>
 
-                  {/* Название */}
                   <h3 className="display-title text-2xl font-bold text-white transition group-hover:text-[#4FD1C5]">
                     {order.title}
                   </h3>
 
-                  {/* Описание */}
                   {order.description && (
                     <p className="mt-2 line-clamp-3 text-sm text-white/50">
                       {order.description}
                     </p>
                   )}
 
-                  {/* Теги */}
                   {order.tags && order.tags.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {order.tags.slice(0, 4).map((tag) => (
@@ -146,7 +102,6 @@ export function OrdersGrid({ orders }: { orders: Order[] }) {
                     </div>
                   )}
 
-                  {/* Клиент */}
                   <div className="mt-5 flex items-center gap-2 border-t border-white/5 pt-4">
                     {order.client.avatar_url ? (
                       <img
@@ -174,14 +129,13 @@ export function OrdersGrid({ orders }: { orders: Order[] }) {
                     </div>
                   </div>
 
-                  {/* Бюджет + срок + отклики + кнопка */}
                   <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
                     <div className="flex-1">
                       <div className="text-xs uppercase tracking-wider text-white/40">
                         Бюджет
                       </div>
                       <div className="text-2xl font-bold text-[#4FD1C5]">
-                        {formatBudget(order)}
+                        {formatOrderBudget(order)}
                       </div>
                       <div className="mt-2 flex items-center gap-3 text-xs text-white/40">
                         {deadline && (
@@ -197,7 +151,6 @@ export function OrdersGrid({ orders }: { orders: Order[] }) {
                       </div>
                     </div>
 
-                    {/* Кнопка */}
                     <button className="group/btn relative overflow-hidden rounded-full border border-[#4FD1C5]/30 bg-[#4FD1C5]/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition-all duration-500 hover:border-[#4FD1C5]/60 hover:bg-[#4FD1C5]/20">
                       <span className="relative z-10 flex items-center gap-2">
                         <MessageCircle className="h-4 w-4" />

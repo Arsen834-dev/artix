@@ -1,3 +1,4 @@
+// components/response-modal.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,6 +14,7 @@ import {
   Check,
   MessageCircle,
 } from 'lucide-react';
+import { useBodyScrollLock } from '@/lib/use-body-scroll-lock';
 
 export function ResponseModal({
   orderId,
@@ -34,12 +36,10 @@ export function ResponseModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  useBodyScrollLock(true);
+
   useEffect(() => {
     setMounted(true);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,15 +83,16 @@ export function ResponseModal({
 
       setSuccess(true);
       setTimeout(() => {
-        onClose();
+        // 🎯 FIX: refresh() ДО onClose()
         router.refresh();
+        onClose();
       }, 1500);
     } catch (err: any) {
       console.error(err);
       setError(
         err.message.includes('duplicate')
           ? 'Ты уже откликнулся на этот заказ'
-          : err.message || 'Ошибка'
+          : err.message || 'Ошибка',
       );
     } finally {
       setIsLoading(false);
@@ -190,7 +191,7 @@ export function ResponseModal({
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="mb-2 block text-sm font-medium text-white/70">
                       Срок (дней) *
@@ -240,6 +241,6 @@ export function ResponseModal({
         </motion.div>
       </motion.div>
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }

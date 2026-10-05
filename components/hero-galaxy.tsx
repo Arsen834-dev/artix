@@ -1,3 +1,4 @@
+// components/hero-galaxy.tsx
 'use client';
 
 import Image from 'next/image';
@@ -159,12 +160,35 @@ function Stars() {
 }
 
 // ============================================
-// ЛУНА — ПЛАВНАЯ + ГРАНИЦЫ
+// ЛУНА — ПЛАВНАЯ + ГРАНИЦЫ (кешируем высоту)
 // ============================================
 function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) {
   const moonRef = useRef<HTMLDivElement>(null);
   const positionRef = useRef(0);
   const lastVelocityRef = useRef(0);
+  const moonHeightRef = useRef(0);
+  const screenHeightRef = useRef(0);
+
+  // 🎯 Кешируем размеры через ResizeObserver, а не читаем offsetHeight каждый кадр
+  useEffect(() => {
+    const updateSizes = () => {
+      if (moonRef.current) {
+        moonHeightRef.current = moonRef.current.offsetHeight;
+      }
+      screenHeightRef.current = window.innerHeight;
+    };
+
+    updateSizes();
+
+    const ro = new ResizeObserver(updateSizes);
+    if (moonRef.current) ro.observe(moonRef.current);
+    window.addEventListener('resize', updateSizes);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', updateSizes);
+    };
+  }, []);
 
   useEffect(() => {
     let animationId: number;
@@ -175,13 +199,8 @@ function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) 
           (velocityRef.current - lastVelocityRef.current) * 0.06;
         positionRef.current -= lastVelocityRef.current * 0.15;
 
-        // 🎯 RANGE = высота луны + высота экрана
-        const moonHeight = moonRef.current.offsetHeight;
-        const screenHeight = window.innerHeight;
-        const range = screenHeight + moonHeight;
+        const range = screenHeightRef.current + moonHeightRef.current;
 
-        // 🎯 Мягкое зацикливание: сдвигаем позицию ровно на range,
-        // когда луна полностью ушла за экран
         let y = positionRef.current;
 
         if (y < -range) {
@@ -197,7 +216,7 @@ function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) 
     animate();
     return () => cancelAnimationFrame(animationId);
   }, [velocityRef]);
-    
+
   return (
     <motion.div
       ref={moonRef}
@@ -277,6 +296,20 @@ function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) 
 }
 
 // ============================================
+// КОНФИГ КАРТОЧЕК — ВЫНЕСЕН ЗА ПРЕДЕЛЫ КОМПОНЕНТА
+// ============================================
+const CARD_CONFIG = [
+  { y: 22, size: 280, offset: 0, z: 8, speed: 0.15 },
+  { y: 48, size: 340, offset: 700, z: 10, speed: 0.12 },
+  { y: 18, size: 260, offset: 1400, z: 6, speed: 0.18 },
+  { y: 58, size: 320, offset: 2100, z: 9, speed: 0.1 },
+  { y: 38, size: 360, offset: 2800, z: 11, speed: 0.14 },
+  { y: 65, size: 280, offset: 3500, z: 7, speed: 0.16 },
+];
+
+const RANGE = 4200;
+
+// ============================================
 // КАРТОЧКА — ДВИЖЕТСЯ САМА + СКРОЛЛ УСКОРЯЕТ
 // ============================================
 function FlyingCard({
@@ -292,17 +325,7 @@ function FlyingCard({
   const [isHovered, setIsHovered] = useState(false);
   const autoScrollRef = useRef(0);
 
-  const config = [
-    { y: 22, size: 280, offset: 0, z: 8, speed: 0.15 },
-    { y: 48, size: 340, offset: 700, z: 10, speed: 0.12 },
-    { y: 18, size: 260, offset: 1400, z: 6, speed: 0.18 },
-    { y: 58, size: 320, offset: 2100, z: 9, speed: 0.1 },
-    { y: 38, size: 360, offset: 2800, z: 11, speed: 0.14 },
-    { y: 65, size: 280, offset: 3500, z: 7, speed: 0.16 },
-  ];
-
-  const c = config[index % config.length];
-  const RANGE = 4200;
+  const c = CARD_CONFIG[index % CARD_CONFIG.length];
 
   useEffect(() => {
     let animationId: number;
@@ -420,17 +443,25 @@ export function HeroGalaxy({
   heroArtworks: Artwork[];
   isVisible: boolean;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef(0);
   const velocityRef = useRef(0);
 
+  // 🎯 Wheel слушаем на контейнере, а не на window.
+  // Prevent default нужен, чтобы страница не пыталась скроллиться.
+  // data-lenis-prevent отключает Lenis внутри контейнера.
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !isVisible) return;
+
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       velocityRef.current += e.deltaY * 0.4;
     };
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, []);
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, [isVisible]);
 
   useEffect(() => {
     let animationId: number;
@@ -444,7 +475,11 @@ export function HeroGalaxy({
   }, []);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-[#0a0a0f]">
+    <div
+      ref={containerRef}
+      data-lenis-prevent
+      className="relative h-screen w-full overflow-hidden bg-[#0a0a0f]"
+    >
       <Stars />
 
       {/* ЛОГО + ARTIX СВЕРХУ */}
@@ -481,7 +516,13 @@ export function HeroGalaxy({
             fill="none"
           />
           <defs>
-            <linearGradient id="wave-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient
+              id="wave-gradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="0%"
+            >
               <stop offset="0%" stopColor="#6C63FF" stopOpacity="0" />
               <stop offset="50%" stopColor="#B794F6" stopOpacity="1" />
               <stop offset="100%" stopColor="#4FD1C5" stopOpacity="0" />
@@ -493,7 +534,12 @@ export function HeroGalaxy({
       {/* КАРТОЧКИ */}
       <div className="absolute inset-0 z-[5]">
         {heroArtworks.slice(0, 6).map((art, i) => (
-          <FlyingCard key={art.id} artwork={art} index={i} scrollRef={scrollRef} />
+          <FlyingCard
+            key={art.id}
+            artwork={art}
+            index={i}
+            scrollRef={scrollRef}
+          />
         ))}
       </div>
 

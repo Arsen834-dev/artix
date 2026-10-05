@@ -60,8 +60,8 @@ export function ReviewModal({
 
       setSuccess(true);
       setTimeout(() => {
-        onClose();
         router.refresh();
+        onClose();
       }, 1500);
     } catch (err: any) {
       console.error(err);

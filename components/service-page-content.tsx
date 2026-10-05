@@ -1,3 +1,4 @@
+// components/service-page-content.tsx
 'use client';
 
 import Link from 'next/link';
@@ -14,21 +15,11 @@ import {
 } from 'lucide-react';
 import { DealModal } from './deal-modal';
 import { DeleteButton } from './delete-button';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  portrait: 'Портреты',
-  fantasy: 'Фэнтези',
-  anime: 'Аниме',
-  illustration: 'Иллюстрации',
-  '3d': '3D',
-  pixel: 'Пиксель-арт',
-  scifi: 'Sci-Fi',
-  concept: 'Концепт-арт',
-  sketch: 'Скетчи',
-  nature: 'Природа',
-  architecture: 'Архитектура',
-  other: 'Другое',
-};
+import {
+  getCategoryLabel,
+  formatServicePrice,
+  formatDelivery,
+} from '@/lib/constants';
 
 type Service = {
   id: number;
@@ -69,26 +60,6 @@ type SimilarService = {
     is_sponsor: boolean;
   };
 };
-
-function formatPrice(service: {
-  price: number;
-  price_type: string;
-  price_to: number | null;
-}): string {
-  if (service.price_type === 'from') {
-    return `от ${service.price.toLocaleString('ru-RU')}₽`;
-  }
-  if (service.price_type === 'range' && service.price_to) {
-    return `${service.price.toLocaleString('ru-RU')}–${service.price_to.toLocaleString('ru-RU')}₽`;
-  }
-  return `${service.price.toLocaleString('ru-RU')}₽`;
-}
-
-function formatDelivery(days: number): string {
-  if (days === 1) return '1 день';
-  if (days < 5) return `${days} дня`;
-  return `${days} дней`;
-}
 
 export function ServicePageContent({
   service,
@@ -171,7 +142,7 @@ export function ServicePageContent({
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-2">
               <span className="glass rounded-full px-3 py-1 text-xs font-medium text-white/90">
-                {CATEGORY_LABELS[service.category] || service.category}
+                {getCategoryLabel(service.category)}
               </span>
               {service.artist.is_sponsor && (
                 <span className="flex items-center gap-1 rounded-full bg-yellow-400/95 px-3 py-1 text-xs font-medium text-black">
@@ -197,7 +168,7 @@ export function ServicePageContent({
                 Стоимость
               </div>
               <div className="gradient-text mt-1 text-4xl font-bold">
-                {formatPrice(service)}
+                {formatServicePrice(service)}
               </div>
 
               <div className="mt-4 flex items-center gap-2 text-sm text-white/60">
@@ -323,10 +294,10 @@ export function ServicePageContent({
                       </div>
                       <div className="mt-4 flex items-center justify-between">
                         <span className="text-sm text-white/40">
-                          {CATEGORY_LABELS[item.category] || item.category}
+                          {getCategoryLabel(item.category)}
                         </span>
                         <span className="gradient-text text-lg font-bold">
-                          {formatPrice(item)}
+                          {formatServicePrice(item)}
                         </span>
                       </div>
                     </div>

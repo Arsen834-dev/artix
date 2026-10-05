@@ -1,23 +1,8 @@
+// app/feed/page.tsx
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
-import { ArtworkCardProps } from '@/components/feeds/feed-main';
-import { FeedMain } from '@/components/feeds/feed-main';
-
-const CATEGORIES = [
-  { slug: 'all', label: 'Все' },
-  { slug: 'portrait', label: 'Портреты' },
-  { slug: 'fantasy', label: 'Фэнтези' },
-  { slug: 'anime', label: 'Аниме' },
-  { slug: 'illustration', label: 'Иллюстрации' },
-  { slug: '3d', label: '3D' },
-  { slug: 'pixel', label: 'Пиксель-арт' },
-  { slug: 'scifi', label: 'Sci-Fi' },
-  { slug: 'concept', label: 'Концепт-арт' },
-  { slug: 'sketch', label: 'Скетчи' },
-  { slug: 'nature', label: 'Природа' },
-  { slug: 'architecture', label: 'Архитектура' },
-  { slug: 'other', label: 'Другое' },
-];
+import { ArtworkCardProps, FeedMain } from '@/components/feeds/feed-main';
+import { CATEGORIES } from '@/lib/constants';
 
 async function FeedContent({
   searchParams,

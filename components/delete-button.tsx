@@ -1,9 +1,12 @@
+// components/delete-button.tsx
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { Trash2, Loader2, AlertTriangle, X } from 'lucide-react';
+import { useBodyScrollLock } from '@/lib/use-body-scroll-lock';
 
 type Table = 'artworks' | 'services' | 'orders';
 
@@ -20,9 +23,12 @@ export function DeleteButton({
   className?: string;
   label?: string;
 }) {
+  const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useBodyScrollLock(showConfirm);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -37,7 +43,9 @@ export function DeleteButton({
 
       if (deleteError) throw deleteError;
 
-      window.location.href = redirectTo;
+      // 🎯 FIX: router.push + refresh вместо window.location.href
+      router.push(redirectTo);
+      router.refresh();
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Ошибка удаления');

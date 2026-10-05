@@ -1,5 +1,6 @@
+// components/sponsor-modal.tsx
 'use client';
-
+import { useBodyScrollLock } from '@/lib/use-body-scroll-lock';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,15 +17,19 @@ import {
   MessageCircle,
 } from 'lucide-react';
 
+// 🎯 Реквизиты из ENV (fallback — на случай, если не заданы)
+const SPONSOR_CARD =
+  process.env.NEXT_PUBLIC_SPONSOR_CARD || '2202 2088 7480 3472';
+const SPONSOR_DISCORD =
+  process.env.NEXT_PUBLIC_SPONSOR_DISCORD || 'fl4wer834';
+
 export function SponsorModal({ onClose }: { onClose: () => void }) {
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [step, setStep] = useState<'info' | 'payment'>('info');
 
-  const cardNumber = '2202 2088 7480 3472';
-  const discordUsername = 'fl4wer834';
+useBodyScrollLock(true);
 
-  // 🎯 Ждём монтирования клиента для Portal
   useEffect(() => {
     setMounted(true);
     document.body.style.overflow = 'hidden';
@@ -35,14 +40,13 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
   }, []);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(cardNumber.replace(/\s/g, ''));
+    navigator.clipboard.writeText(SPONSOR_CARD.replace(/\s/g, ''));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   if (!mounted) return null;
 
-  // 🎯 PORTAL — рендер в document.body
   return createPortal(
     <AnimatePresence>
       <motion.div
@@ -145,7 +149,7 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-mono text-sm font-bold text-white">
-                        {cardNumber}
+                        {SPONSOR_CARD}
                       </span>
                       <button
                         onClick={handleCopy}
@@ -168,7 +172,7 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
                     <p className="text-xs text-white/70">
                       Напиши в Discord{' '}
                       <span className="font-medium text-yellow-400">
-                        {discordUsername}
+                        {SPONSOR_DISCORD}
                       </span>{' '}
                       — пришли скриншот и username. Выдадим PRO в течение 24
                       часов.
@@ -192,7 +196,7 @@ export function SponsorModal({ onClose }: { onClose: () => void }) {
         </div>
       </motion.div>
     </AnimatePresence>,
-    document.body // 🎯 РЕНДЕРИМ В BODY
+    document.body,
   );
 }
 
