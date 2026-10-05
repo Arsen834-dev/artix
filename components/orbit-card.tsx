@@ -20,6 +20,7 @@ export function OrbitCard({
   radius,
   baseAngle,
   isMounted,
+  moonSize,
 }: {
   artwork: Artwork;
   index: number;
@@ -28,13 +29,14 @@ export function OrbitCard({
   radius: number;
   baseAngle: number;
   isMounted: boolean;
+  moonSize: number;
 }) {
   const [isHovered, setIsHovered] = useState(false);
 
-  // 🎯 Угол карточки = базовый угол + угол орбиты
+  // 🎯 Угол карточки
   const angle = useTransform(orbitAngle, (a: number) => a + baseAngle);
 
-  // 🎯 X и Y — по кругу
+  // 🎯 X и Y — по эллипсу
   const x = useTransform(angle, (a: number) =>
     Math.cos((a * Math.PI) / 180) * radius
   );
@@ -42,22 +44,19 @@ export function OrbitCard({
     Math.sin((a * Math.PI) / 180) * radius * 0.4
   );
 
-  // 🎯 Z-глубина
+  // 🎯 Z-глубина: sin угла
   const z = useTransform(angle, (a: number) =>
     Math.sin((a * Math.PI) / 180)
   );
 
   // 🎯 Масштаб
-  const scale = useTransform(z, [-1, 1], [0.6, 1.2]);
+  const scale = useTransform(z, [-1, 1], [0.7, 1.15]);
 
-  // 🎯 Прозрачность
-  const opacity = useTransform(z, [-1, 1], [0.4, 1]);
+  // 🎯 🆕 Z-INDEX: спереди — высокий (100), сзади — низкий (0)
+  const zIndex = useTransform(z, [-1, 1], [0, 100]);
 
-  // 🎯 Z-index
-  const zIndex = useTransform(z, [-1, 1], [1, 100]);
-
-  // 🎯 Наклон
-  const rotate = useTransform(angle, (a: number) => a * 0.1);
+  // 🎯 🆕 ПРОЗРАЧНОСТЬ: НЕ трогаем — оставляем 1 всегда
+  // Карточки будут скрываться ПОД планетой через z-index
 
   return (
     <motion.div
@@ -66,7 +65,6 @@ export function OrbitCard({
         x,
         y,
         scale,
-        opacity,
         zIndex,
       }}
       initial={{
@@ -84,7 +82,7 @@ export function OrbitCard({
           : {}
       }
       transition={{
-        duration: 1,
+        duration: 1.2,
         delay: 0.5 + index * 0.15,
         ease: [0.21, 0.47, 0.32, 0.98],
       }}
@@ -94,7 +92,7 @@ export function OrbitCard({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           animate={{
-            scale: isHovered ? 1.3 : 1,
+            scale: isHovered ? 1.25 : 1,
           }}
           transition={{ duration: 0.3 }}
           style={{

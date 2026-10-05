@@ -143,9 +143,9 @@ function Stars() {
 }
 
 // ============================================
-// ЛУНА
+// ЛУНА — ВРАЩЕНИЕ ПО ОСИ X
 // ============================================
-function Moon({ size = 80, rotateValue }: { size?: number; rotateValue: any }) {
+function Moon({ size = 80 }: { size?: number }) {
   return (
     <motion.div
       className="pointer-events-none absolute left-1/2 top-1/2 z-[5]"
@@ -156,7 +156,6 @@ function Moon({ size = 80, rotateValue }: { size?: number; rotateValue: any }) {
         maxHeight: '600px',
         x: '-50%',
         y: '-50%',
-        rotate: rotateValue,
       }}
     >
       <div className="relative h-full w-full">
@@ -170,7 +169,7 @@ function Moon({ size = 80, rotateValue }: { size?: number; rotateValue: any }) {
         />
 
         {/* Луна */}
-        <div
+        <motion.div
           className="relative h-full w-full overflow-hidden rounded-full"
           style={{
             background: `radial-gradient(circle at 50% 25%, #e8dcff 0%, #d4c4ff 8%, #b794f6 22%, #6C63FF 48%, #3a2a7a 72%, #15102a 92%, #0a0a0f 100%)`,
@@ -180,15 +179,53 @@ function Moon({ size = 80, rotateValue }: { size?: number; rotateValue: any }) {
               0 0 200px rgba(108, 99, 255, 0.5)
             `,
           }}
+          animate={{
+            rotateX: [0, 360], // 🎯 ВРАЩЕНИЕ ПО X
+          }}
+          transition={{
+            duration: 60, // 🎯 Очень медленно — 60 сек на оборот
+            repeat: Infinity,
+            ease: 'linear',
+          }}
         >
           {/* Кратеры */}
-          <div className="absolute rounded-full" style={{ width: '18%', height: '18%', left: '20%', top: '32%', background: 'radial-gradient(circle, rgba(60, 40, 100, 0.6), transparent 100%)' }} />
-          <div className="absolute rounded-full" style={{ width: '12%', height: '12%', left: '62%', top: '22%', background: 'radial-gradient(circle, rgba(60, 40, 100, 0.5), transparent 100%)' }} />
-          <div className="absolute rounded-full" style={{ width: '8%', height: '8%', left: '42%', top: '58%', background: 'radial-gradient(circle, rgba(60, 40, 100, 0.5), transparent 100%)' }} />
-        </div>
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '18%',
+              height: '18%',
+              left: '20%',
+              top: '32%',
+              background:
+                'radial-gradient(circle, rgba(60, 40, 100, 0.6), transparent 100%)',
+            }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '12%',
+              height: '12%',
+              left: '62%',
+              top: '22%',
+              background:
+                'radial-gradient(circle, rgba(60, 40, 100, 0.5), transparent 100%)',
+            }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '8%',
+              height: '8%',
+              left: '42%',
+              top: '58%',
+              background:
+                'radial-gradient(circle, rgba(60, 40, 100, 0.5), transparent 100%)',
+            }}
+          />
+        </motion.div>
 
-        {/* ARTIX на луне */}
-        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        {/* ARTIX на луне — НЕ вращается */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
           <h1
             className="select-none text-center font-bold leading-none tracking-tighter"
             style={{
@@ -267,23 +304,7 @@ export function HeroGalaxy({
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => window.removeEventListener('wheel', handleWheel);
   }, []);
-
-  // 🎯 Поворот луны — медленный, независимый
-  const moonRotate = useMotionValue(0);
-  useEffect(() => {
-    let animationId: number;
-    let lastTime = performance.now();
-
-    const animate = (time: number) => {
-      const delta = (time - lastTime) / 1000;
-      lastTime = time;
-      moonRotate.set(moonRotate.get() + 2 * delta);
-      animationId = requestAnimationFrame(animate);
-    };
-    animationId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationId);
-  }, [moonRotate]);
-
+  
   const cards = heroArtworks.slice(0, 12);
   const total = cards.length;
 
@@ -335,7 +356,7 @@ export function HeroGalaxy({
       </motion.div>
 
       {/* 🎯 ЛУНА В ЦЕНТРЕ */}
-      <Moon size={50} rotateValue={moonRotate} />
+      <Moon size={50} />
 
       {/* 🎯 КАРТОЧКИ НА ОРБИТЕ */}
       <div className="absolute inset-0 z-[10]">
@@ -346,9 +367,10 @@ export function HeroGalaxy({
             index={i}
             total={total}
             orbitAngle={orbitAngle}
-            radius={Math.min(window.innerWidth * 0.35, 450)}
+            radius={typeof window !== 'undefined' ? Math.min(window.innerWidth * 0.35, 450) : 400}
             baseAngle={(i / total) * 360}
             isMounted={isMounted}
+            moonSize={50}
           />
         ))}
       </div>
