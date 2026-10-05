@@ -6,6 +6,7 @@ import { CustomCursor } from '@/components/custom-cursor';
 import { SmoothScroll } from '@/components/smooth-scroll';
 import { SiteHeader } from '@/components/site-header';
 import { PageTransition } from '@/components/page-transition';
+import { AuthProvider } from '@/components/auth-provider';
 
 const spaceGrotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
@@ -30,12 +31,11 @@ export const metadata: Metadata = {
     'Платформа для художников и их заказчиков. Найди художника или продай свои работы.',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
       { url: '/logo-64.png', sizes: '64x64', type: 'image/png' },
       { url: '/logo.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: '/logo.png',
-    shortcut: '/favicon.ico',
+    shortcut: '/logo-64.png',
   },
   openGraph: {
     title: 'Artix — космическая биржа художников',
@@ -61,14 +61,16 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} ${inter.variable} ${unbounded.variable} antialiased bg-[#0a0a0f] text-white font-sans`}
       >
-        <CustomCursor />
-        <CosmicBackground />
-        <SmoothScroll>
-          <SiteHeader />
-          <main className="relative z-10">
-            <PageTransition>{children}</PageTransition>
-          </main>
-        </SmoothScroll>
+        <AuthProvider>
+          <CustomCursor />
+          <CosmicBackground />
+          <SmoothScroll>
+            <SiteHeader />
+            <main className="relative z-10">
+              <PageTransition>{children}</PageTransition>
+            </main>
+          </SmoothScroll>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -7,15 +7,18 @@ import {
   ArrowLeft,
   Star,
   Clock,
-  MessageCircle,
   Eye,
   Tag,
   Users,
   Calendar,
   Shield,
+  MessageCircle,
+  Check,
 } from 'lucide-react';
-import { DealModal } from './deal-modal';
 import { DeleteButton } from './delete-button';
+import { ResponseModal } from './response-modal';
+import { useRequireAuth } from './auth-provider';
+import { StartChatButton } from './start-chat-button';
 
 const CATEGORY_LABELS: Record<string, string> = {
   portrait: 'Портреты',
@@ -57,6 +60,22 @@ type Order = {
   };
 };
 
+type Response = {
+  id: number;
+  message: string;
+  price: number;
+  delivery_days: number;
+  status: string;
+  created_at: string;
+  artist: {
+    id: string;
+    username: string;
+    display_name: string;
+    avatar_url: string | null;
+    is_sponsor: boolean;
+  };
+};
+
 function formatBudget(order: Order): string {
   if (order.budget_type === 'up_to') {
     return `до ${order.budget.toLocaleString('ru-RU')}₽`;
@@ -76,19 +95,28 @@ function formatDeadline(days: number | null): string {
 
 export function OrderPageContent({
   order,
+  responses = [],
   userId,
 }: {
   order: Order;
+  responses?: Response[];
   userId: string;
 }) {
-  const [showDeal, setShowDeal] = useState(false);
+  const [showResponse, setShowResponse] = useState(false);
   const isOwner = order.client.id === userId;
+  const requireAuth = useRequireAuth();
 
   const createdDate = new Date(order.created_at).toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
+
+  const hasResponded = responses.some((r) => r.artist.id === userId);
+
+  const handleRespond = () => {
+    requireAuth(() => setShowResponse(true), 'отклики на заказы');
+  };
 
   return (
     <>
@@ -176,8 +204,108 @@ export function OrderPageContent({
                 </div>
               </div>
             )}
+
+            {/* 🎯 ОТКЛИКИ */}
+            {responses.length > 0 && (
+              <div className="mt-12">
+                <h3 className="display-title mb-6 text-2xl font-bold text-white">
+                  Отклики ({responses.length})
+                </h3>
+                <div className="space-y-4">
+                  {responses.map((response, i) => (
+                    <motion.div
+                      key={response.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: i * 0.05 }}
+                      className={`rounded-3xl border p-6 backdrop-blur-sm transition ${
+                        response.status === 'accepted'
+                          ? 'border-green-500/40 bg-green-500/5'
+                          : response.status === 'rejected'
+                            ? 'border-red-500/20 bg-red-500/5 opacity-60'
+                            : 'border-white/10 bg-[#16161f]/60 hover:border-[#4FD1C5]/30'
+                      }`}
+                    >
+                      {/* Автор */}
+                      <div className="flex items-start gap-3">
+                        <Link
+                          href={`/artist/${response.artist.username}`}
+                          className="flex flex-1 items-center gap-3"
+                        >
+                          {response.artist.avatar_url ? (
+                            <img
+                              src={response.artist.avatar_url}
+                              alt={response.artist.display_name}
+                              className="h-12 w-12 rounded-full object-cover ring-2 ring-white/10"
+                            />
+                          ) : (
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#4FD1C5] to-[#68D391] text-lg font-bold text-white">
+                              {response.artist.display_name[0]}
+                            </div>
+                          )}
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-white">
+                                {response.artist.display_name}
+                              </span>
+                              {response.artist.is_sponsor && (
+                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                              )}
+                            </div>
+                            <span className="text-xs text-white/40">
+                              @{response.artist.username}
+                            </span>
+                          </div>
+                        </Link>
+
+                        {response.status === 'accepted' && (
+                          <span className="rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">
+                            Выбран
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Сообщение */}
+                      <p className="mt-4 whitespace-pre-wrap text-sm text-white/70">
+                        {response.message}
+                      </p>
+
+                      {/* Цена + срок */}
+                      <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-4">
+                        <div>
+                          <div className="text-xs text-white/40">Цена</div>
+                          <div className="text-lg font-bold text-[#4FD1C5]">
+                            {response.price.toLocaleString('ru-RU')}₽
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-white/40">Срок</div>
+                          <div className="font-medium text-white">
+                            {formatDeadline(response.delivery_days)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Действия — для заказчика */}
+                      {isOwner && response.status === 'pending' && (
+                        <div className="mt-4 flex gap-2">
+                          <StartChatButton
+                            targetUserId={response.artist.id}
+                            className="flex flex-1 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 py-2.5 text-sm font-medium text-white transition hover:border-white/20 hover:bg-white/10"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            Написать
+                          </StartChatButton>
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
+          {/* Правая колонка */}
           <div className="space-y-6">
             <div className="rounded-2xl border border-white/10 bg-[#16161f]/60 p-6 backdrop-blur-sm">
               <div className="text-xs uppercase tracking-wider text-white/40">
@@ -192,20 +320,28 @@ export function OrderPageContent({
                 Срок: {formatDeadline(order.deadline_days)}
               </div>
 
-              {!isOwner && (
+              {/* Кнопка «Откликнуться» — только для художников, не владельца */}
+              {!isOwner && !hasResponded && (
                 <button
-                  onClick={() => setShowDeal(true)}
+                  onClick={handleRespond}
                   className="group relative mt-5 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#4FD1C5] to-[#68D391] px-6 py-3 font-medium text-white shadow-lg shadow-[#4FD1C5]/30 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-[#4FD1C5]/50"
                 >
                   <Shield className="h-4 w-4" />
-                  Откликнуться безопасно
+                  Откликнуться
                 </button>
               )}
 
-              {!isOwner && (
-                <div className="mt-3 flex items-center justify-center gap-1 text-[10px] text-white/40">
-                  <Shield className="h-3 w-3" />
-                  Деньги защищены платформой
+              {!isOwner && hasResponded && (
+                <div className="mt-5 flex items-center gap-2 rounded-2xl border border-green-500/20 bg-green-500/5 p-3 text-sm text-green-400">
+                  <Check className="h-4 w-4" />
+                  Ты уже откликнулся
+                </div>
+              )}
+
+              {isOwner && (
+                <div className="mt-5 flex items-center gap-2 rounded-2xl border border-[#4FD1C5]/20 bg-[#4FD1C5]/5 p-3 text-sm text-[#4FD1C5]">
+                  <Star className="h-4 w-4" />
+                  Это твой заказ
                 </div>
               )}
             </div>
@@ -250,7 +386,6 @@ export function OrderPageContent({
               )}
             </div>
 
-            {/* 🎯 КНОПКА УДАЛЕНИЯ — только для автора */}
             {isOwner && (
               <DeleteButton
                 table="orders"
@@ -263,14 +398,12 @@ export function OrderPageContent({
         </motion.div>
       </div>
 
-      {showDeal && (
-        <DealModal
-          artistId={order.client.id}
-          artistName={order.client.display_name}
+      {showResponse && (
+        <ResponseModal
           orderId={order.id}
-          defaultAmount={order.budget}
-          defaultTitle={order.title}
-          onClose={() => setShowDeal(false)}
+          orderTitle={order.title}
+          orderBudget={order.budget}
+          onClose={() => setShowResponse(false)}
         />
       )}
     </>

@@ -32,12 +32,33 @@ async function OrderContent({ id }: { id: string }) {
 
   const client = Array.isArray(order.client) ? order.client[0] : order.client;
 
+  // 🎯 Загрузка откликов
+  const { data: responses } = await supabase
+    .from('responses')
+    .select(`
+      id, message, price, delivery_days, status, created_at,
+      artist:profiles!responses_artist_id_fkey (
+        id, username, display_name, avatar_url, is_sponsor
+      )
+    `)
+    .eq('order_id', id)
+    .order('created_at', { ascending: false });
+
   return (
     <OrderPageContent
       order={{
         ...order,
         client,
       }}
+      responses={(responses || []).map((r: any) => ({
+        id: r.id,
+        message: r.message,
+        price: r.price,
+        delivery_days: r.delivery_days || 3,
+        status: r.status,
+        created_at: r.created_at,
+        artist: Array.isArray(r.artist) ? r.artist[0] : r.artist,
+      }))}
       userId={user?.id || ''}
     />
   );

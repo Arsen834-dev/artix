@@ -36,8 +36,20 @@ export function LoginForm({
 
       if (error) throw error;
 
+      // 🎯 Проверяем подтверждение почты
+      if (data.user && !data.user.email_confirmed_at) {
+        // Выходим — не даём доступ
+        await supabase.auth.signOut();
+        setError(
+          '⚠️ Подтверди почту! Мы отправили письмо на ' +
+            email +
+            '. Проверь папку «Спам».'
+        );
+        setIsLoading(false);
+        return;
+      }
+
       if (data.session) {
-        // 🎯 Жёсткий редирект — гарантированно работает
         window.location.href = '/feed';
       } else {
         setError('Не удалось создать сессию');
@@ -48,7 +60,7 @@ export function LoginForm({
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <motion.div
@@ -148,12 +160,16 @@ export function LoginForm({
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300"
+                className={`rounded-xl border p-4 text-sm ${
+                  error.startsWith('⚠️')
+                    ? 'border-yellow-500/20 bg-yellow-500/10 text-yellow-300'
+                    : 'border-red-500/20 bg-red-500/10 text-red-300'
+                }`}
               >
                 {error}
               </motion.div>
             )}
-
+            
             {/* КНОПКА */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRequireAuth } from './auth-provider';
 
 export function LikeButton({
   artworkId,
@@ -24,7 +24,7 @@ export function LikeButton({
   const [isLoading, setIsLoading] = useState(false);
   const [showBurst, setShowBurst] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const router = useRouter();
+  const requireAuth = useRequireAuth();
 
   useEffect(() => {
     const supabase = createClient();
@@ -33,12 +33,13 @@ export function LikeButton({
     });
   }, []);
 
-  const handleLike = async (e: React.MouseEvent) => {
+  const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
+    // 🎯 Если не залогинен — модалка
     if (!userId) {
-      router.push('/auth/login');
+      requireAuth(() => {}, 'лайки');
       return;
     }
 
@@ -48,7 +49,6 @@ export function LikeButton({
     const supabase = createClient();
     const wasLiked = isLiked;
 
-    // 🎯 Оптимистичный UI
     setIsLiked(!wasLiked);
     setCount((c) => (wasLiked ? c - 1 : c + 1));
 
@@ -57,27 +57,28 @@ export function LikeButton({
       setTimeout(() => setShowBurst(false), 800);
     }
 
-    try {
-      if (wasLiked) {
-        await supabase
-          .from('likes')
-          .delete()
-          .eq('user_id', userId)
-          .eq('artwork_id', artworkId);
-      } else {
-        await supabase.from('likes').insert({
-          user_id: userId,
-          artwork_id: artworkId,
-        });
+    (async () => {
+      try {
+        if (wasLiked) {
+          await supabase
+            .from('likes')
+            .delete()
+            .eq('user_id', userId)
+            .eq('artwork_id', artworkId);
+        } else {
+          await supabase.from('likes').insert({
+            user_id: userId,
+            artwork_id: artworkId,
+          });
+        }
+      } catch (err) {
+        setIsLiked(wasLiked);
+        setCount((c) => (wasLiked ? c + 1 : c - 1));
+        console.error(err);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      // Откат при ошибке
-      setIsLiked(wasLiked);
-      setCount((c) => (wasLiked ? c + 1 : c - 1));
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
+    })();
   };
 
   const sizeClasses = {
@@ -97,17 +98,13 @@ export function LikeButton({
       onClick={handleLike}
       disabled={isLoading}
       className={`group relative flex items-center gap-1.5 ${textSizes[size]} transition-all ${
-        isLiked
-          ? 'text-red-500'
-          : 'text-white/70 hover:text-red-400'
+        isLiked ? 'text-red-500' : 'text-white/70 hover:text-red-400'
       }`}
       aria-label={isLiked ? 'Убрать лайк' : 'Поставить лайк'}
     >
-      {/* 🎯 Взрыв при лайке */}
       <AnimatePresence>
         {showBurst && (
           <>
-            {/* Кольцо */}
             <motion.div
               initial={{ scale: 0, opacity: 1 }}
               animate={{ scale: 2.5, opacity: 0 }}
@@ -118,7 +115,6 @@ export function LikeButton({
               <div className="h-4 w-4 rounded-full border-2 border-red-500" />
             </motion.div>
 
-            {/* Частицы */}
             {[...Array(6)].map((_, i) => {
               const angle = (i * 360) / 6;
               const rad = (angle * Math.PI) / 180;
@@ -142,13 +138,8 @@ export function LikeButton({
         )}
       </AnimatePresence>
 
-      {/* Сердце */}
       <motion.div
-        animate={
-          isLiked
-            ? { scale: [1, 1.3, 1] }
-            : { scale: 1 }
-        }
+        animate={isLiked ? { scale: [1, 1.3, 1] } : { scale: 1 }}
         transition={{ duration: 0.3 }}
         className="relative"
       >
@@ -159,7 +150,6 @@ export function LikeButton({
         />
       </motion.div>
 
-      {/* Счётчик */}
       {showCount && <span className="font-medium">{count}</span>}
     </button>
   );
