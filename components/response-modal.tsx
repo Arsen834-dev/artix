@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 import {
   X,
   Send,
-  DollarSign,
   Clock,
   Loader2,
   Check,
@@ -178,7 +177,9 @@ export function ResponseModal({
                       Твоя цена (₽) *
                     </label>
                     <div className="relative">
-                      <DollarSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/30">
+                        ₽
+                      </span>
                       <input
                         type="number"
                         value={price}
@@ -189,7 +190,7 @@ export function ResponseModal({
                       />
                     </div>
                   </div>
-
+                  
                   <div>
                     <label className="mb-2 block text-sm font-medium text-white/70">
                       Срок (дней) *
