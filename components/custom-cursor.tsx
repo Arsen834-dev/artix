@@ -27,6 +27,7 @@ export function CustomCursor() {
     let animationId: number;
 
     const animate = () => {
+      // 🎯 Плавно догоняем курсор (шлейф)
       trailPos.current.x += (mousePos.current.x - trailPos.current.x) * 0.15;
       trailPos.current.y += (mousePos.current.y - trailPos.current.y) * 0.15;
 
@@ -54,14 +55,14 @@ export function CustomCursor() {
 
   return (
     <>
-      {/* 🎯 Шлейф */}
+      {/* 🎯 Шлейф — плавно следует за курсором */}
       <div
         ref={trailRef}
         className="pointer-events-none fixed left-0 top-0 z-[999998] rounded-full border border-[#B794F6]/50 transition-[width,height,background] duration-300"
         style={{ width: 24, height: 24 }}
       />
 
-      {/* 🎯 Точка */}
+      {/* 🎯 Точка — мгновенно на курсоре */}
       <div
         ref={dotRef}
         className="pointer-events-none fixed left-0 top-0 z-[999999]"

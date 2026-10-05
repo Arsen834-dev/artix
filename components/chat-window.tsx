@@ -367,7 +367,10 @@ export function ChatWindow({
       </div>
 
       {/* MESSAGES */}
-      <div ref={messagesContainerRef} className="flex-1">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto"
+      >
         <div className="container mx-auto max-w-3xl space-y-3 px-4 py-6">
           {messages.length === 0 && (
             <div className="py-20 text-center">

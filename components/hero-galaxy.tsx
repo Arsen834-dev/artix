@@ -168,7 +168,6 @@ function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) 
 
   useEffect(() => {
     let animationId: number;
-    const RANGE = window.innerHeight + 800; // цикл
 
     const animate = () => {
       if (moonRef.current) {
@@ -176,11 +175,20 @@ function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) 
           (velocityRef.current - lastVelocityRef.current) * 0.06;
         positionRef.current -= lastVelocityRef.current * 0.15;
 
-        // 🎯 Зацикливание
+        // 🎯 RANGE = высота луны + высота экрана
+        const moonHeight = moonRef.current.offsetHeight;
+        const screenHeight = window.innerHeight;
+        const range = screenHeight + moonHeight;
+
+        // 🎯 Мягкое зацикливание: сдвигаем позицию ровно на range,
+        // когда луна полностью ушла за экран
         let y = positionRef.current;
-        while (y < -RANGE) y += RANGE;
-        while (y > RANGE) y -= RANGE;
-        positionRef.current = y;
+
+        if (y < -range) {
+          positionRef.current = range;
+        } else if (y > range) {
+          positionRef.current = -range;
+        }
 
         moonRef.current.style.transform = `translate(-50%, ${positionRef.current}px)`;
       }
@@ -189,7 +197,7 @@ function Moon({ velocityRef }: { velocityRef: React.MutableRefObject<number> }) 
     animate();
     return () => cancelAnimationFrame(animationId);
   }, [velocityRef]);
-  
+    
   return (
     <motion.div
       ref={moonRef}
