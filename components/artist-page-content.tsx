@@ -1,4 +1,4 @@
-// components/artist-page-content.tsx
+﻿// components/artist-page-content.tsx
 'use client';
 
 import Link from 'next/link';
@@ -189,7 +189,7 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
     >
-      <Link href={`/service/${service.id}`}>
+      <Link href={`/services/${service.id}`}>
         <div className="group h-full overflow-hidden rounded-3xl border border-white/5 bg-[#16161f]/60 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-[#6C63FF]/40 hover:shadow-2xl hover:shadow-[#6C63FF]/20">
           <div className="relative aspect-video overflow-hidden bg-[#0a0a0f]">
             {service.image_url ? (

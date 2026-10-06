@@ -1,4 +1,4 @@
-// components/upload-form.tsx
+﻿// components/upload-form.tsx
 'use client';
 
 import { useState, useRef, DragEvent, ChangeEvent } from 'react';
@@ -199,7 +199,7 @@ export function UploadForm({
           .single();
 
         if (insertError) throw insertError;
-        redirectPath = `/service/${data.id}`;
+        redirectPath = `/services/${data.id}`;
       }
 
       if (tab === 'order') {

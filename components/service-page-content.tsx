@@ -1,4 +1,4 @@
-// components/service-page-content.tsx
+﻿// components/service-page-content.tsx
 'use client';
 
 import Link from 'next/link';
@@ -259,7 +259,7 @@ export function ServicePageContent({
             </h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {similar.map((item) => (
-                <Link key={item.id} href={`/service/${item.id}`}>
+                <Link key={item.id} href={`/services/${item.id}`}>
                   <div className="group h-full overflow-hidden rounded-3xl border border-white/5 bg-[#16161f]/60 backdrop-blur-sm transition-all duration-500 hover:-translate-y-1 hover:border-[#6C63FF]/40">
                     <div className="relative aspect-video overflow-hidden bg-[#0a0a0f]">
                       {item.image_url ? (

@@ -1,4 +1,4 @@
-// app/order/[id]/page.tsx
+// app/orders/[id]/page.tsx
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
