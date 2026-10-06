@@ -29,6 +29,7 @@ const unbounded = Unbounded({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://artix-beryl.vercel.app'),
   title: 'Artix — космическая биржа художников',
   description:
     'Платформа для художников и их заказчиков. Найди художника или продай свои работы.',
