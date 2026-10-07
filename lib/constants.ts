@@ -84,7 +84,9 @@ export function formatDelivery(days: number | null | undefined): string {
   return `${days} дней`;
 }
 
-export function formatDeliveryShort(days: number | null | undefined): string | null {
+export function formatDeliveryShort(
+  days: number | null | undefined,
+): string | null {
   if (!days) return null;
   if (days === 1) return '1 день';
   if (days < 5) return `${days} дня`;
@@ -130,45 +132,51 @@ export function timeAgoFull(dateString: string): string {
 // ============================================
 // СТАТУСЫ СДЕЛОК
 // ============================================
+//
+// 🎯 Artix — трекер сделок, не платёжная система.
+// Комиссии нет, оплата — напрямую между сторонами.
+//
+// Статусы:
+// - pending     → «Обсуждается» (сделка создана, стороны договариваются)
+// - in_progress → «В работе» (заказчик подтвердил начало)
+// - completed   → «Завершено» (заказчик подтвердил завершение)
+// - disputed    → «Спор»
+// - cancelled   → «Отменено»
+//
 export const DEAL_STATUS_LABELS: Record<
   string,
   { label: string; color: string; description: string }
 > = {
   pending: {
-    label: 'Ожидает оплаты',
+    label: 'Обсуждается',
     color: 'yellow',
-    description: 'Клиент ещё не оплатил сделку',
-  },
-  paid: {
-    label: 'Оплачено',
-    color: 'blue',
-    description: 'Деньги в эскроу, художник может приступать',
+    description:
+      'Стороны договариваются о деталях и способе оплаты. Оплата — напрямую.',
   },
   in_progress: {
     label: 'В работе',
     color: 'purple',
-    description: 'Художник выполняет работу',
+    description: 'Художник выполняет работу.',
   },
   completed: {
     label: 'Завершено',
     color: 'green',
-    description: 'Заказчик подтвердил, деньги переведены художнику',
+    description: 'Заказчик подтвердил завершение работы.',
   },
   disputed: {
     label: 'Спор',
     color: 'red',
-    description: 'Открыт спор, разбирается арбитраж',
+    description: 'Открыт спор. Платформа разбирается в течение 3 рабочих дней.',
   },
   cancelled: {
     label: 'Отменено',
     color: 'gray',
-    description: 'Сделка отменена',
+    description: 'Сделка отменена.',
   },
 };
 
 export const DEAL_STATUS_BADGE: Record<string, string> = {
   pending: 'text-yellow-400 bg-yellow-400/10',
-  paid: 'text-blue-400 bg-blue-400/10',
   in_progress: 'text-purple-400 bg-purple-400/10',
   completed: 'text-green-400 bg-green-400/10',
   disputed: 'text-red-400 bg-red-400/10',
@@ -178,7 +186,12 @@ export const DEAL_STATUS_BADGE: Record<string, string> = {
 // ============================================
 // ПРОЧЕЕ
 // ============================================
-export const COMMISSION_PERCENT = 5;
+
+// 🎯 Комиссия не используется в сделках.
+// Оставлено на будущее — если решишь подключить эквайринг.
+export const COMMISSION_PERCENT = 0;
+
+// Минимальная сумма сделки (в рублях)
 export const MIN_DEAL_AMOUNT = 500;
 
 // ============================================

@@ -5,14 +5,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import {
-  X,
-  DollarSign,
-  Shield,
-  Info,
-  Loader2,
-  Check,
-} from 'lucide-react';
+import { X, DollarSign, Info, Loader2, Check, Handshake } from 'lucide-react';
 import { useBodyScrollLock } from '@/lib/use-body-scroll-lock';
 
 type DealModalProps = {
@@ -24,8 +17,6 @@ type DealModalProps = {
   defaultTitle?: string;
   onClose: () => void;
 };
-
-const COMMISSION_PERCENT = 5;
 
 export function DealModal({
   artistId,
@@ -44,12 +35,10 @@ export function DealModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // 🎯 Хук — на верхнем уровне компонента, до всех if/return
+  // 🎯 Хук — на верхнем уровне
   useBodyScrollLock(true);
 
   const amountNum = parseInt(amount) || 0;
-  const commission = Math.round((amountNum * COMMISSION_PERCENT) / 100);
-  const artistReceives = amountNum - commission;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +67,12 @@ export function DealModal({
       return;
     }
 
+    if (user.id === artistId) {
+      setError('Нельзя создать сделку с самим собой');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { data, error: insertError } = await supabase
         .from('deals')
@@ -89,9 +84,9 @@ export function DealModal({
           title: title.trim(),
           description: description.trim() || null,
           amount: amountNum,
-          commission_percent: COMMISSION_PERCENT,
-          commission_amount: commission,
-          artist_amount: artistReceives,
+          commission_percent: 0,
+          commission_amount: 0,
+          artist_amount: amountNum,
           status: 'pending',
         })
         .select('id')
@@ -221,43 +216,14 @@ export function DealModal({
               </div>
             </div>
 
-            <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-white/60">Сумма сделки</span>
-                <span className="font-semibold text-white">
-                  {amountNum.toLocaleString('ru-RU')}₽
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-1 text-white/60">
-                  Комиссия платформы ({COMMISSION_PERCENT}%)
-                  <Info className="h-3 w-3" />
-                </span>
-                <span className="font-semibold text-yellow-400">
-                  −{commission.toLocaleString('ru-RU')}₽
-                </span>
-              </div>
-              <div className="border-t border-white/5 pt-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-white/60">
-                    Художник получит
-                  </span>
-                  <span className="gradient-text text-xl font-bold">
-                    {artistReceives.toLocaleString('ru-RU')}₽
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 rounded-2xl border border-[#6C63FF]/20 bg-[#6C63FF]/5 p-4">
-              <Shield className="h-5 w-5 shrink-0 text-[#B794F6]" />
+            {/* 🎯 Честное предупреждение */}
+            <div className="flex gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-4">
+              <Info className="h-5 w-5 shrink-0 text-yellow-400" />
               <div className="text-xs leading-relaxed text-white/70">
-                <div className="mb-1 font-semibold text-white">
-                  Безопасная сделка
+                <div className="mb-1 font-semibold text-yellow-400">
+                  Artix — трекер сделки, не платёжная система
                 </div>
-                Деньги резервируются на платформе. Художник получит их после
-                того, как ты подтвердишь работу. Если что-то пойдёт не так —
-                арбитраж.
+                Платформа <span className="text-white">не проводит оплату</span>. Вы договариваетесь о способе перевода напрямую в чате (СБП, карта — как удобно). Здесь вы фиксируете договорённость, обсуждаете детали и отслеживаете статус.
               </div>
             </div>
 
@@ -280,7 +246,7 @@ export function DealModal({
                   </>
                 ) : (
                   <>
-                    <Shield className="h-5 w-5" />
+                    <Handshake className="h-5 w-5" />
                     Создать сделку
                   </>
                 )}

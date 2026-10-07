@@ -1,3 +1,4 @@
+// app/deals/page.tsx
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -14,11 +15,14 @@ async function DealsContent() {
     redirect('/auth/login');
   }
 
-  // Сделки где я клиент или художник
+  // 🎯 Авто-подтверждение просроченных сделок
+  await supabase.rpc('auto_confirm_deals');
+
+  // Сделки, где я клиент или художник
   const { data: deals, error } = await supabase
     .from('deals')
     .select(`
-      id, title, description, amount, commission_amount, artist_amount,
+      id, title, description, amount,
       status, created_at,
       client:profiles!deals_client_id_fkey (id, username, display_name, avatar_url),
       artist:profiles!deals_artist_id_fkey (id, username, display_name, avatar_url)
@@ -31,19 +35,22 @@ async function DealsContent() {
     return <div className="text-center text-white/60">Ошибка загрузки</div>;
   }
 
-  const formatted = (deals || []).map((d: any) => ({
-    id: d.id,
-    title: d.title,
-    description: d.description,
-    amount: d.amount,
-    commission_amount: d.commission_amount,
-    artist_amount: d.artist_amount,
-    status: d.status,
-    created_at: d.created_at,
-    client: Array.isArray(d.client) ? d.client[0] : d.client,
-    artist: Array.isArray(d.artist) ? d.artist[0] : d.artist,
-    isClient: d.client?.id === user.id,
-  }));
+  const formatted = (deals || []).map((d: any) => {
+    const client = Array.isArray(d.client) ? d.client[0] : d.client;
+    const artist = Array.isArray(d.artist) ? d.artist[0] : d.artist;
+
+    return {
+      id: d.id,
+      title: d.title,
+      description: d.description,
+      amount: d.amount,
+      status: d.status,
+      created_at: d.created_at,
+      client,
+      artist,
+      isClient: client?.id === user.id,
+    };
+  });
 
   return <DealsList deals={formatted} userId={user.id} />;
 }
@@ -56,7 +63,8 @@ export default function DealsPage() {
           <span className="gradient-text">Сделки</span>
         </h1>
         <p className="mt-4 text-lg text-white/50">
-          Безопасные сделки с комиссией {5}%
+          Трекер договорённостей. Artix не проводит оплату — вы договариваетесь
+          напрямую.
         </p>
       </div>
 

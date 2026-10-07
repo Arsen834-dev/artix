@@ -1,3 +1,4 @@
+// app/deals/[id]/page.tsx
 import { notFound, redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
@@ -14,12 +15,16 @@ async function DealContent({ id }: { id: string }) {
     redirect('/auth/login');
   }
 
+  // 🎯 Авто-подтверждение просроченных сделок (7 дней)
+  // Вызываем перед загрузкой — если что-то авто-завершилось, увидим сразу
+  await supabase.rpc('auto_confirm_deals');
+
   const { data: deal, error } = await supabase
     .from('deals')
     .select(`
-      id, title, description, amount, commission_percent, commission_amount, artist_amount,
+      id, title, description, amount,
       status, client_paid, artist_completed, client_confirmed,
-      created_at, paid_at, completed_at,
+      created_at, completed_at,
       service_id, order_id,
       client:profiles!deals_client_id_fkey (id, username, display_name, avatar_url),
       artist:profiles!deals_artist_id_fkey (id, username, display_name, avatar_url)
@@ -39,6 +44,13 @@ async function DealContent({ id }: { id: string }) {
     notFound();
   }
 
+  // 🎯 Загрузка истории статусов
+  const { data: history } = await supabase
+    .from('deal_status_history')
+    .select('id, from_status, to_status, comment, created_at, changed_by')
+    .eq('deal_id', id)
+    .order('created_at', { ascending: true });
+
   return (
     <DealPageContent
       deal={{
@@ -48,6 +60,7 @@ async function DealContent({ id }: { id: string }) {
       }}
       userId={user.id}
       isClient={client.id === user.id}
+      history={history || []}
     />
   );
 }

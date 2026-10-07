@@ -1,30 +1,21 @@
+// components/deals-list.tsx
 'use client';
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Clock, Handshake, User } from 'lucide-react';
+import { DEAL_STATUS_BADGE, DEAL_STATUS_LABELS } from '@/lib/constants';
 
 type Deal = {
   id: number;
   title: string;
   description: string | null;
   amount: number;
-  commission_amount: number;
-  artist_amount: number;
   status: string;
   created_at: string;
   client: any;
   artist: any;
   isClient: boolean;
-};
-
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  pending: { label: 'Ожидает оплаты', color: 'text-yellow-400 bg-yellow-400/10' },
-  paid: { label: 'Оплачено', color: 'text-blue-400 bg-blue-400/10' },
-  in_progress: { label: 'В работе', color: 'text-purple-400 bg-purple-400/10' },
-  completed: { label: 'Завершено', color: 'text-green-400 bg-green-400/10' },
-  disputed: { label: 'Спор', color: 'text-red-400 bg-red-400/10' },
-  cancelled: { label: 'Отменено', color: 'text-gray-400 bg-gray-400/10' },
 };
 
 export function DealsList({
@@ -49,7 +40,8 @@ export function DealsList({
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {deals.map((deal, i) => {
-        const status = STATUS_LABELS[deal.status] || STATUS_LABELS.pending;
+        const status = DEAL_STATUS_LABELS[deal.status] || DEAL_STATUS_LABELS.pending;
+        const badge = DEAL_STATUS_BADGE[deal.status] || DEAL_STATUS_BADGE.pending;
         const otherPerson = deal.isClient ? deal.artist : deal.client;
 
         return (
@@ -66,7 +58,7 @@ export function DealsList({
                     #{deal.id}
                   </span>
                   <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.color}`}
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${badge}`}
                   >
                     {status.label}
                   </span>
@@ -94,14 +86,9 @@ export function DealsList({
 
                 <div className="mt-4 flex items-end justify-between border-t border-white/5 pt-4">
                   <div>
-                    <div className="text-xs text-white/40">
-                      {deal.isClient ? 'К оплате' : 'Получишь'}
-                    </div>
+                    <div className="text-xs text-white/40">Сумма сделки</div>
                     <div className="gradient-text text-xl font-bold">
-                      {deal.isClient
-                        ? deal.amount.toLocaleString('ru-RU')
-                        : deal.artist_amount.toLocaleString('ru-RU')}
-                      ₽
+                      {deal.amount.toLocaleString('ru-RU')}₽
                     </div>
                   </div>
                   <div className="text-right text-[10px] text-white/30">
