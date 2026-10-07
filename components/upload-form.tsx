@@ -15,6 +15,7 @@ import {
   Palette,
   ShoppingBag,
   Briefcase,
+  RussianRuble,
 } from 'lucide-react';
 import { CATEGORIES } from '@/lib/constants';
 
@@ -174,8 +175,9 @@ export function UploadForm({
       }
 
       if (tab === 'service') {
-        if (!servicePrice || parseInt(servicePrice) < 0) {
-          throw new Error('Введи корректную цену');
+        const priceNum = servicePrice ? parseInt(servicePrice) : 0;
+        if (priceNum < 0) {
+          throw new Error('Цена не может быть отрицательной');
         }
 
         const { data, error: insertError } = await supabase
@@ -186,7 +188,7 @@ export function UploadForm({
             description: description.trim() || null,
             image_url: publicUrl,
             category,
-            price: parseInt(servicePrice),
+            price: priceNum,
             price_type: servicePriceType,
             price_to:
               servicePriceType === 'range' && servicePriceTo
@@ -203,8 +205,9 @@ export function UploadForm({
       }
 
       if (tab === 'order') {
-        if (!budget || parseInt(budget) < 0) {
-          throw new Error('Введи корректный бюджет');
+        const budgetNum = budget ? parseInt(budget) : 0;
+        if (budgetNum < 0) {
+          throw new Error('Бюджет не может быть отрицательным');
         }
 
         const { data, error: insertError } = await supabase
@@ -215,7 +218,7 @@ export function UploadForm({
             description: description.trim() || null,
             image_url: publicUrl,
             category,
-            budget: parseInt(budget),
+            budget: budgetNum,
             budget_type: budgetType,
             budget_to:
               budgetType === 'range' && budgetTo ? parseInt(budgetTo) : null,
@@ -227,7 +230,6 @@ export function UploadForm({
           .single();
 
         if (insertError) throw insertError;
-        // 🎯 FIX: /orders/[id], а не /order/[id]
         redirectPath = `/orders/${data.id}`;
       }
 
@@ -535,19 +537,24 @@ export function UploadForm({
                   className="mb-3 block text-sm font-medium text-white/70"
                 >
                   {servicePriceType === 'range'
-                    ? 'Цена от (₽) *'
-                    : 'Цена (₽) *'}
+                    ? 'Цена от (₽)'
+                    : 'Цена (₽)'}
                 </label>
-                <input
-                  id="servicePrice"
-                  type="number"
-                  value={servicePrice}
-                  onChange={(e) => setServicePrice(e.target.value)}
-                  placeholder="5000"
-                  min="0"
-                  required
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white placeholder:text-white/30 outline-none transition focus:border-[#6C63FF]/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-[#6C63FF]/20"
-                />
+                <div className="relative">
+                  <RussianRuble className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                  <input
+                    id="servicePrice"
+                    type="number"
+                    value={servicePrice}
+                    onChange={(e) => setServicePrice(e.target.value)}
+                    placeholder="0"
+                    min="0"
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] py-3 pl-11 pr-4 text-white placeholder:text-white/30 outline-none transition focus:border-[#6C63FF]/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-[#6C63FF]/20"
+                  />
+                </div>
+                <p className="mt-2 text-xs text-white/40">
+                  Можешь указать 0 для бесплатной услуги.
+                </p>
               </div>
 
               {servicePriceType === 'range' && (
@@ -556,18 +563,20 @@ export function UploadForm({
                     htmlFor="servicePriceTo"
                     className="mb-3 block text-sm font-medium text-white/70"
                   >
-                    Цена до (₽) *
+                    Цена до (₽)
                   </label>
-                  <input
-                    id="servicePriceTo"
-                    type="number"
-                    value={servicePriceTo}
-                    onChange={(e) => setServicePriceTo(e.target.value)}
-                    placeholder="15000"
-                    min="0"
-                    required
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white placeholder:text-white/30 outline-none transition focus:border-[#6C63FF]/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-[#6C63FF]/20"
-                  />
+                  <div className="relative">
+                    <RussianRuble className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                    <input
+                      id="servicePriceTo"
+                      type="number"
+                      value={servicePriceTo}
+                      onChange={(e) => setServicePriceTo(e.target.value)}
+                      placeholder="15000"
+                      min="0"
+                      className="w-full rounded-2xl border border-white/10 bg-white/[0.03] py-3 pl-11 pr-4 text-white placeholder:text-white/30 outline-none transition focus:border-[#6C63FF]/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-[#6C63FF]/20"
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -627,18 +636,23 @@ export function UploadForm({
                   htmlFor="budget"
                   className="mb-3 block text-sm font-medium text-white/70"
                 >
-                  {budgetType === 'range' ? 'Бюджет от (₽) *' : 'Бюджет (₽) *'}
+                  {budgetType === 'range' ? 'Бюджет от (₽)' : 'Бюджет (₽)'}
                 </label>
-                <input
-                  id="budget"
-                  type="number"
-                  value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
-                  placeholder="8000"
-                  min="0"
-                  required
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white placeholder:text-white/30 outline-none transition focus:border-[#4FD1C5]/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-[#4FD1C5]/20"
-                />
+                <div className="relative">
+                  <RussianRuble className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                  <input
+                    id="budget"
+                    type="number"
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                    placeholder="0"
+                    min="0"
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] py-3 pl-11 pr-4 text-white placeholder:text-white/30 outline-none transition focus:border-[#4FD1C5]/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-[#4FD1C5]/20"
+                  />
+                </div>
+                <p className="mt-2 text-xs text-white/40">
+                  Можешь указать 0, если готов обсудить бесплатно.
+                </p>
               </div>
 
               {budgetType === 'range' && (
@@ -647,18 +661,20 @@ export function UploadForm({
                     htmlFor="budgetTo"
                     className="mb-3 block text-sm font-medium text-white/70"
                   >
-                    Бюджет до (₽) *
+                    Бюджет до (₽)
                   </label>
-                  <input
-                    id="budgetTo"
-                    type="number"
-                    value={budgetTo}
-                    onChange={(e) => setBudgetTo(e.target.value)}
-                    placeholder="15000"
-                    min="0"
-                    required
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white placeholder:text-white/30 outline-none transition focus:border-[#4FD1C5]/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-[#4FD1C5]/20"
-                  />
+                  <div className="relative">
+                    <RussianRuble className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                    <input
+                      id="budgetTo"
+                      type="number"
+                      value={budgetTo}
+                      onChange={(e) => setBudgetTo(e.target.value)}
+                      placeholder="15000"
+                      min="0"
+                      className="w-full rounded-2xl border border-white/10 bg-white/[0.03] py-3 pl-11 pr-4 text-white placeholder:text-white/30 outline-none transition focus:border-[#4FD1C5]/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-[#4FD1C5]/20"
+                    />
+                  </div>
                 </div>
               )}
             </div>

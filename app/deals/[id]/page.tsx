@@ -16,7 +16,6 @@ async function DealContent({ id }: { id: string }) {
   }
 
   // 🎯 Авто-подтверждение просроченных сделок (7 дней)
-  // Вызываем перед загрузкой — если что-то авто-завершилось, увидим сразу
   await supabase.rpc('auto_confirm_deals');
 
   const { data: deal, error } = await supabase
@@ -51,6 +50,18 @@ async function DealContent({ id }: { id: string }) {
     .eq('deal_id', id)
     .order('created_at', { ascending: true });
 
+  // 🎯 Проверяем, оставил ли уже заказчик отзыв
+  let hasReviewed = false;
+  if (client.id === user.id) {
+    const { data: existingReview } = await supabase
+      .from('reviews')
+      .select('id')
+      .eq('author_id', user.id)
+      .eq('deal_id', id)
+      .maybeSingle();
+    hasReviewed = !!existingReview;
+  }
+
   return (
     <DealPageContent
       deal={{
@@ -61,6 +72,7 @@ async function DealContent({ id }: { id: string }) {
       userId={user.id}
       isClient={client.id === user.id}
       history={history || []}
+      hasReviewed={hasReviewed}
     />
   );
 }

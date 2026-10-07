@@ -1,3 +1,4 @@
+// components/review-modal.tsx
 'use client';
 
 import { useState } from 'react';
@@ -47,11 +48,48 @@ export function ReviewModal({
       return;
     }
 
+    // 🎯 Проверяем, что user — заказчик этой сделки и сделка завершена
+    if (!dealId) {
+      setError('Отзыв можно оставить только по сделке');
+      setIsLoading(false);
+      return;
+    }
+
+    const { data: deal } = await supabase
+      .from('deals')
+      .select('client_id, artist_id, status')
+      .eq('id', dealId)
+      .single();
+
+    if (!deal) {
+      setError('Сделка не найдена');
+      setIsLoading(false);
+      return;
+    }
+
+    if (deal.client_id !== user.id) {
+      setError('Только заказчик может оставить отзыв');
+      setIsLoading(false);
+      return;
+    }
+
+    if (deal.artist_id !== targetId) {
+      setError('Цель отзыва должна быть художником сделки');
+      setIsLoading(false);
+      return;
+    }
+
+    if (deal.status !== 'completed') {
+      setError('Сделку нужно сначала завершить');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { error: insertError } = await supabase.from('reviews').insert({
         author_id: user.id,
         target_id: targetId,
-        deal_id: dealId || null,
+        deal_id: dealId,
         rating,
         comment: comment.trim() || null,
       });
@@ -65,7 +103,11 @@ export function ReviewModal({
       }, 1500);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Ошибка');
+      setError(
+        err.message.includes('duplicate')
+          ? 'Ты уже оставил отзыв по этой сделке'
+          : err.message || 'Ошибка',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +158,6 @@ export function ReviewModal({
           onClick={(e) => e.stopPropagation()}
           className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-[#16161f]"
         >
-          {/* Заголовок */}
           <div className="flex items-center justify-between border-b border-white/5 p-6">
             <div>
               <h2 className="display-title text-xl font-bold text-white">
@@ -133,7 +174,6 @@ export function ReviewModal({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5 p-6">
-            {/* Звёзды */}
             <div className="text-center">
               <div className="mb-3 flex justify-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => {
@@ -167,7 +207,6 @@ export function ReviewModal({
               </div>
             </div>
 
-            {/* Комментарий */}
             <div>
               <label className="mb-2 block text-sm font-medium text-white/70">
                 Комментарий

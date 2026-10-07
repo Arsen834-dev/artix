@@ -16,6 +16,7 @@ import {
   Handshake,
   XCircle,
   Circle,
+  Star,
 } from 'lucide-react';
 import { ReviewModal } from './review-modal';
 import { StartChatButton } from './start-chat-button';
@@ -68,11 +69,13 @@ export function DealPageContent({
   userId,
   isClient,
   history = [],
+  hasReviewed = false,
 }: {
   deal: Deal;
   userId: string;
   isClient: boolean;
   history?: HistoryEntry[];
+  hasReviewed?: boolean;
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -83,7 +86,6 @@ export function DealPageContent({
   const otherPerson = isClient ? deal.artist : deal.client;
   const StatusIcon = STATUS_ICONS[deal.status] || Circle;
 
-  // 🎯 Универсальный вызов RPC
   const callRpc = async (fn: string, args: Record<string, any>) => {
     setIsLoading(true);
     setError(null);
@@ -260,7 +262,7 @@ export function DealPageContent({
                 </span>
               </div>
               <p className="mt-2 text-xs text-white/40">
-                Комиссия платформы — 0%. Artix не берёт процент.
+                Комиссия — 0%. Artix не проводит оплату и не берёт процент.
               </p>
             </div>
           </div>
@@ -283,7 +285,6 @@ export function DealPageContent({
             </div>
           )}
 
-          {/* pending + клиент → Начать работу */}
           {deal.status === 'pending' && isClient && (
             <button
               onClick={handleStartWork}
@@ -301,7 +302,6 @@ export function DealPageContent({
             </button>
           )}
 
-          {/* pending + художник → ждём */}
           {deal.status === 'pending' && !isClient && (
             <div className="flex items-center gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-4 text-sm text-yellow-300">
               <Clock className="h-5 w-5" />
@@ -309,7 +309,6 @@ export function DealPageContent({
             </div>
           )}
 
-          {/* in_progress + художник + не отметил → Работа выполнена */}
           {deal.status === 'in_progress' &&
             !isClient &&
             !deal.artist_completed && (
@@ -329,7 +328,6 @@ export function DealPageContent({
               </button>
             )}
 
-          {/* in_progress + художник + отметил → ждём подтверждения */}
           {deal.status === 'in_progress' &&
             !isClient &&
             deal.artist_completed && (
@@ -340,7 +338,6 @@ export function DealPageContent({
               </div>
             )}
 
-          {/* in_progress + клиент → Подтвердить */}
           {deal.status === 'in_progress' && isClient && (
             <button
               onClick={handleConfirmComplete}
@@ -358,7 +355,6 @@ export function DealPageContent({
             </button>
           )}
 
-          {/* in_progress → спор */}
           {deal.status === 'in_progress' && (
             <button
               onClick={handleDispute}
@@ -369,7 +365,6 @@ export function DealPageContent({
             </button>
           )}
 
-          {/* pending → отмена */}
           {deal.status === 'pending' && (
             <button
               onClick={handleCancel}
@@ -380,7 +375,7 @@ export function DealPageContent({
             </button>
           )}
 
-          {/* completed → отзыв */}
+          {/* 🎯 Завершено — отзыв ТОЛЬКО для заказчика */}
           {deal.status === 'completed' && (
             <>
               <div className="mb-4 flex items-center gap-3 rounded-2xl border border-green-500/20 bg-green-500/5 p-4 text-sm text-green-300">
@@ -388,20 +383,35 @@ export function DealPageContent({
                 Сделка завершена! Спасибо 🎉
               </div>
 
-              <button
-                onClick={() => setShowReview(true)}
-                className="group relative w-full overflow-hidden rounded-full border border-white/10 bg-white px-6 py-4 font-semibold text-black transition-all duration-500 hover:scale-[1.02]"
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 transition-colors duration-500 group-hover:text-white">
+              {isClient && !hasReviewed && (
+                <button
+                  onClick={() => setShowReview(true)}
+                  className="group relative w-full overflow-hidden rounded-full border border-white/10 bg-white px-6 py-4 font-semibold text-black transition-all duration-500 hover:scale-[1.02]"
+                >
+                  <span className="relative z-10 flex items-center justify-center gap-2 transition-colors duration-500 group-hover:text-white">
+                    <Star className="h-5 w-5" />
+                    Оставить отзыв
+                  </span>
+                  <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-yellow-400 to-orange-400 transition-transform duration-500 group-hover:translate-x-0" />
+                </button>
+              )}
+
+              {isClient && hasReviewed && (
+                <div className="flex items-center gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-4 text-sm text-yellow-300">
+                  <Star className="h-5 w-5 fill-current" />
+                  Ты уже оставил отзыв
+                </div>
+              )}
+
+              {!isClient && (
+                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/60">
                   <CheckCircle2 className="h-5 w-5" />
-                  Оставить отзыв
-                </span>
-                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-yellow-400 to-orange-400 transition-transform duration-500 group-hover:translate-x-0" />
-              </button>
+                  Сделка завершена. Отзыв оставляет заказчик.
+                </div>
+              )}
             </>
           )}
 
-          {/* disputed */}
           {deal.status === 'disputed' && (
             <div className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
               <AlertTriangle className="h-5 w-5" />
@@ -409,7 +419,6 @@ export function DealPageContent({
             </div>
           )}
 
-          {/* cancelled */}
           {deal.status === 'cancelled' && (
             <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/60">
               <XCircle className="h-5 w-5" />
@@ -417,14 +426,12 @@ export function DealPageContent({
             </div>
           )}
 
-          {/* Чат — всегда доступен */}
           {otherPerson && (
             <div className="mt-4">
               <StartChatButton
                 targetUserId={otherPerson.id}
                 className="flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 py-3 text-sm font-medium text-white/80 transition hover:border-white/20 hover:bg-white/10"
               >
-                <MessageCircle className="h-4 w-4" />
                 Открыть чат
               </StartChatButton>
             </div>
@@ -487,11 +494,11 @@ export function DealPageContent({
         )}
       </div>
 
-      {showReview && (
+      {showReview && isClient && (
         <ReviewModal
           dealId={deal.id}
-          targetId={otherPerson.id}
-          targetName={otherPerson.display_name}
+          targetId={deal.artist.id}
+          targetName={deal.artist.display_name}
           onClose={() => setShowReview(false)}
         />
       )}

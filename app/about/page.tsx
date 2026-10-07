@@ -1,3 +1,4 @@
+// app/about/page.tsx
 'use client';
 
 import Link from 'next/link';
@@ -14,6 +15,9 @@ import {
   Heart,
   Zap,
   ArrowRight,
+  Handshake,
+  Info,
+  Wallet,
 } from 'lucide-react';
 
 // ============================================
@@ -22,7 +26,6 @@ import {
 function AboutHero() {
   return (
     <section className="relative overflow-hidden py-24">
-      {/* Туманности */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-40 -top-40 h-[600px] w-[600px] rounded-full bg-[#6C63FF]/20 blur-[120px]" />
         <div className="absolute -right-40 top-40 h-[600px] w-[600px] rounded-full bg-[#4FD1C5]/15 blur-[120px]" />
@@ -122,7 +125,6 @@ function HowItWorks() {
           </h2>
         </motion.div>
 
-        {/* Два столбца */}
         <div className="grid gap-12 lg:grid-cols-2">
           {/* Художники */}
           <div>
@@ -222,7 +224,115 @@ function HowItWorks() {
 }
 
 // ============================================
-// СЕКЦИЯ 3: ЧТО ВНУТРИ
+// СЕКЦИЯ 3: КАК РАБОТАЕТ ОПЛАТА (честный блок)
+// ============================================
+function HowPaymentWorks() {
+  return (
+    <section className="relative py-24">
+      <div className="container mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="mb-16 text-center"
+        >
+          <span className="text-sm uppercase tracking-widest text-[#B794F6]">
+            Оплата
+          </span>
+          <h2 className="display-title mt-3 text-4xl font-bold text-white md:text-5xl">
+            Как работает <span className="gradient-text">оплата</span>
+          </h2>
+        </motion.div>
+
+        <div className="mx-auto max-w-3xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="rounded-3xl border border-yellow-500/20 bg-yellow-500/5 p-8"
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-yellow-500/20">
+                <Info className="h-6 w-6 text-yellow-400" />
+              </div>
+              <h3 className="display-title text-xl font-bold text-white">
+                Artix — трекер сделок, не платёжная система
+              </h3>
+            </div>
+
+            <div className="space-y-4 text-white/70">
+              <p>
+                <span className="font-semibold text-white">
+                  Мы не проводим оплату.
+                </span>{' '}
+                Artix помогает найти друг друга, зафиксировать договорённость и
+                отслеживать статус работы.
+              </p>
+
+              <p>
+                <span className="font-semibold text-white">
+                  Оплата — напрямую между вами.
+                </span>{' '}
+                Заказчик и художник договариваются о способе перевода в чате
+                (СБП, банковская карта, что угодно). Artix не участвует в
+                переводе и не берёт процент.
+              </p>
+
+              <p>
+                <span className="font-semibold text-white">
+                  Зачем тогда сделка?
+                </span>{' '}
+                Чтобы у обеих сторон была чёткая фиксация: что делаем, за
+                сколько, к какому сроку. И чтобы был трекер статуса — от
+                «обсуждаем» до «завершено».
+              </p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-6 rounded-3xl border border-white/10 bg-[#16161f]/40 p-8"
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#6C63FF]/20">
+                <Handshake className="h-6 w-6 text-[#B794F6]" />
+              </div>
+              <h3 className="display-title text-xl font-bold text-white">
+                Сделки — бесплатны
+              </h3>
+            </div>
+
+            <div className="space-y-4 text-white/70">
+              <p>
+                Artix не берёт комиссию. Художник получает всю сумму, которую
+                вы обсудили.
+              </p>
+
+              <p>
+                Если хочешь поддержать развитие проекта — стань{' '}
+                <Link
+                  href="/auth/sign-up"
+                  className="text-[#B794F6] underline-offset-4 hover:underline"
+                >
+                  спонсором
+                </Link>{' '}
+                за 150 ₽. Это добровольный донат, не обязательство.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// СЕКЦИЯ 4: ЧТО ВНУТРИ
 // ============================================
 function Features() {
   const features = [
@@ -245,22 +355,22 @@ function Features() {
       color: '#4FD1C5',
     },
     {
+      icon: Handshake,
+      title: 'Сделки',
+      description: 'Трекер договорённостей со статусами',
+      color: '#68D391',
+    },
+    {
       icon: Star,
-      title: 'Спонсорство',
-      description: 'Значок PRO для поддерживающих платформу',
+      title: 'Отзывы',
+      description: 'Заказчики оценивают художников после сделки',
       color: '#F6AD55',
     },
     {
       icon: Heart,
-      title: 'Лайки',
-      description: 'Оценивай работы художников',
+      title: 'Спонсорство',
+      description: 'Значок PRO для поддерживающих платформу',
       color: '#F687B3',
-    },
-    {
-      icon: Zap,
-      title: 'Скорость',
-      description: 'Плавные анимации и мгновенная загрузка',
-      color: '#68D391',
     },
   ];
 
@@ -321,17 +431,21 @@ function Features() {
 }
 
 // ============================================
-// СЕКЦИЯ 4: FAQ
+// СЕКЦИЯ 5: FAQ
 // ============================================
 function FAQ() {
   const faqs = [
     {
       q: 'Сколько стоит пользоваться Artix?',
-      a: 'Регистрация, публикация работ, услуг и заказов — бесплатно. Хочешь поддержать проект — стань спонсором за 150₽ и получи золотую звезду в профиле.',
+      a: 'Регистрация, публикация работ, услуг, заказов и сделки — бесплатно. Мы не берём комиссию. Хочешь поддержать проект — стань спонсором за 150 ₽ и получи золотую звезду в профиле.',
     },
     {
       q: 'Как проходят оплаты?',
-      a: 'На этом этапе мы используем собственную систему безопасных сделок с комиссией 5%. Заказчик переводит деньги платформе, они хранятся до подтверждения работы. После этого художник получает сумму за вычетом комиссии.',
+      a: 'Artix не проводит оплату и не хранит деньги. Заказчик и художник договариваются о способе перевода напрямую в чате (СБП, карта). Сделка на Artix — это трекер: вы фиксируете договорённость и отслеживаете статус работы.',
+    },
+    {
+      q: 'Что делать, если что-то пошло не так?',
+      a: 'В сделке есть кнопка «Открыть спор». Обе стороны могут её нажать, если возникли проблемы. Платформа подключается и разбирается в течение 3 рабочих дней.',
     },
     {
       q: 'Можно быть и художником, и заказчиком?',
@@ -342,8 +456,8 @@ function FAQ() {
       a: 'Любой, кто зарегистрировался. Загружай картинку, выбирай категорию, добавляй теги — и работа в галактике.',
     },
     {
-      q: 'Как выделиться среди других?',
-      a: 'Заполни профиль полностью: аватар, обложку, био, соцсети. Публикуй качественные работы и услуги. Стань спонсором за 150₽ — золотая звезда выделит тебя в ленте.',
+      q: 'Кто может оставлять отзывы?',
+      a: 'Только заказчик и только после завершения сделки. Один отзыв на одну сделку. Художник отзыв о заказчике не оставляет.',
     },
     {
       q: 'Что за золотая звезда?',
@@ -394,7 +508,7 @@ function FAQ() {
 }
 
 // ============================================
-// СЕКЦИЯ 5: CTA
+// СЕКЦИЯ 6: CTA
 // ============================================
 function FinalCTA() {
   return (
@@ -407,7 +521,6 @@ function FinalCTA() {
           transition={{ duration: 0.8 }}
           className="relative overflow-hidden rounded-[2rem] border border-white/5 bg-gradient-to-br from-[#16161f] to-[#0a0a0f] p-12 text-center md:p-20"
         >
-          {/* Свечения */}
           <div className="pointer-events-none absolute -left-32 -top-32 h-64 w-64 rounded-full bg-[#6C63FF]/30 blur-[100px]" />
           <div className="pointer-events-none absolute -bottom-32 -right-32 h-64 w-64 rounded-full bg-[#4FD1C5]/20 blur-[100px]" />
 
@@ -482,6 +595,7 @@ export default function AboutPage() {
     <div className="relative min-h-screen bg-[#0a0a0f]">
       <AboutHero />
       <HowItWorks />
+      <HowPaymentWorks />
       <Features />
       <FAQ />
       <FinalCTA />

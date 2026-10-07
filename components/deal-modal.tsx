@@ -5,7 +5,14 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { X, DollarSign, Info, Loader2, Check, Handshake } from 'lucide-react';
+import {
+  X,
+  RussianRuble,
+  Info,
+  Loader2,
+  Check,
+  Handshake,
+} from 'lucide-react';
 import { useBodyScrollLock } from '@/lib/use-body-scroll-lock';
 
 type DealModalProps = {
@@ -50,8 +57,9 @@ export function DealModal({
       setIsLoading(false);
       return;
     }
-    if (amountNum < 500) {
-      setError('Минимальная сумма — 500₽');
+
+    if (amountNum < 0) {
+      setError('Сумма не может быть отрицательной');
       setIsLoading(false);
       return;
     }
@@ -200,20 +208,22 @@ export function DealModal({
 
             <div>
               <label className="mb-2 block text-sm font-medium text-white/70">
-                Сумма сделки (₽) *
+                Сумма сделки (₽)
               </label>
               <div className="relative">
-                <DollarSign className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                <RussianRuble className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
                 <input
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="5000"
-                  min="500"
-                  required
+                  min="0"
                   className="w-full rounded-2xl border border-white/10 bg-white/[0.03] py-3 pl-11 pr-4 text-white placeholder:text-white/30 outline-none transition focus:border-[#6C63FF]/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-[#6C63FF]/20"
                 />
               </div>
+              <p className="mt-2 text-xs text-white/40">
+                Можешь указать 0, если работа бесплатная.
+              </p>
             </div>
 
             {/* 🎯 Честное предупреждение */}
@@ -223,7 +233,10 @@ export function DealModal({
                 <div className="mb-1 font-semibold text-yellow-400">
                   Artix — трекер сделки, не платёжная система
                 </div>
-                Платформа <span className="text-white">не проводит оплату</span>. Вы договариваетесь о способе перевода напрямую в чате (СБП, карта — как удобно). Здесь вы фиксируете договорённость, обсуждаете детали и отслеживаете статус.
+                Платформа <span className="text-white">не проводит оплату</span>.
+                Вы договариваетесь о способе перевода напрямую в чате (СБП,
+                карта — как удобно). Здесь вы фиксируете договорённость,
+                обсуждаете детали и отслеживаете статус.
               </div>
             </div>
 
@@ -235,7 +248,7 @@ export function DealModal({
 
             <button
               type="submit"
-              disabled={isLoading || amountNum < 500}
+              disabled={isLoading}
               className="group relative w-full overflow-hidden rounded-full border border-white/10 bg-white px-6 py-4 font-semibold text-black transition-all duration-500 hover:scale-[1.02] disabled:opacity-40"
             >
               <span className="relative z-10 flex items-center justify-center gap-2 transition-colors duration-500 group-hover:text-white">

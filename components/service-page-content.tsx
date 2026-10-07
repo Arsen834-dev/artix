@@ -11,7 +11,8 @@ import {
   Eye,
   Tag,
   Palette,
-  Shield,
+  Handshake,
+  Info,
 } from 'lucide-react';
 import { DealModal } from './deal-modal';
 import { DeleteButton } from './delete-button';
@@ -181,15 +182,18 @@ export function ServicePageContent({
                   onClick={() => setShowDeal(true)}
                   className="group relative mt-5 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#6C63FF] to-[#B794F6] px-6 py-3 font-medium text-white shadow-lg shadow-[#6C63FF]/30 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-[#6C63FF]/50"
                 >
-                  <Shield className="h-4 w-4" />
-                  Заказать безопасно
+                  <Handshake className="h-4 w-4" />
+                  Создать сделку
                 </button>
               )}
 
               {!isOwner && (
-                <div className="mt-3 flex items-center justify-center gap-1 text-[10px] text-white/40">
-                  <Shield className="h-3 w-3" />
-                  Деньги защищены платформой
+                <div className="mt-3 flex items-start gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-3 text-[11px] leading-relaxed text-white/60">
+                  <Info className="mt-0.5 h-3 w-3 shrink-0 text-yellow-400" />
+                  <span>
+                    Artix не проводит оплату. Вы договариваетесь о способе
+                    перевода напрямую.
+                  </span>
                 </div>
               )}
             </div>
