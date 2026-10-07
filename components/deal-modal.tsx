@@ -1,6 +1,6 @@
 // components/deal-modal.tsx
 'use client';
-import { useBodyScrollLock } from '@/lib/use-body-scroll-lock';
+
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
@@ -13,6 +13,7 @@ import {
   Loader2,
   Check,
 } from 'lucide-react';
+import { useBodyScrollLock } from '@/lib/use-body-scroll-lock';
 
 type DealModalProps = {
   artistId: string;
@@ -23,7 +24,7 @@ type DealModalProps = {
   defaultTitle?: string;
   onClose: () => void;
 };
-useBodyScrollLock(true);
+
 const COMMISSION_PERCENT = 5;
 
 export function DealModal({
@@ -42,6 +43,9 @@ export function DealModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // 🎯 Хук — на верхнем уровне компонента, до всех if/return
+  useBodyScrollLock(true);
 
   const amountNum = parseInt(amount) || 0;
   const commission = Math.round((amountNum * COMMISSION_PERCENT) / 100);
@@ -97,7 +101,6 @@ export function DealModal({
 
       setSuccess(true);
       setTimeout(() => {
-        // 🎯 FIX: путь /deals/[id], а не /deal/[id]
         router.push(`/deals/${data.id}`);
       }, 1500);
     } catch (err: any) {
