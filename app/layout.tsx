@@ -6,9 +6,11 @@ import { CosmicBackground } from '@/components/cosmic-background';
 import { CustomCursor } from '@/components/custom-cursor';
 import { SmoothScroll } from '@/components/smooth-scroll';
 import { SiteHeader } from '@/components/site-header';
+import { SiteFooter } from '@/components/site-footer';
 import { PageTransition } from '@/components/page-transition';
 import { AuthProvider } from '@/components/auth-provider';
 import { OnlineHeartbeat } from '@/components/online-heartbeat';
+import { BannedGuard } from '@/components/banned-guard';
 import { createClient } from '@/lib/supabase/server';
 
 const spaceGrotesk = Space_Grotesk({
@@ -72,6 +74,7 @@ export default async function RootLayout({
       >
         <AuthProvider initialUser={user}>
           {user && <OnlineHeartbeat />}
+          {user && <BannedGuard />}
           <CustomCursor />
           <CosmicBackground />
           <SmoothScroll>
@@ -79,6 +82,7 @@ export default async function RootLayout({
             <main className="relative z-10">
               <PageTransition>{children}</PageTransition>
             </main>
+            <SiteFooter />
           </SmoothScroll>
         </AuthProvider>
       </body>

@@ -1,3 +1,4 @@
+// components/site-header.tsx
 'use client';
 
 import Link from 'next/link';
@@ -17,6 +18,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { UserMenu } from './user-menu';
+import { NotificationsBell } from './notifications-bell';
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -41,7 +43,7 @@ export function SiteHeader() {
     { href: '/feed', label: 'Работы', icon: ImageIcon },
     { href: '/services', label: 'Услуги', icon: Briefcase },
     { href: '/orders', label: 'Заказы', icon: ShoppingBag },
-    { href: '/artist', label: 'Художники', icon: Users },
+    { href: '/artists', label: 'Художники', icon: Users },
     { href: '/about', label: 'О проекте', icon: Info },
   ];
 
@@ -102,6 +104,9 @@ export function SiteHeader() {
 
           {/* ДЕЙСТВИЯ */}
           <div className="flex items-center gap-2">
+            {/* Уведомления */}
+            <NotificationsBell />
+
             {/* Иконка чата */}
             <Link
               href="/messages"

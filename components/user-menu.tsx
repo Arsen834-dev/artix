@@ -1,3 +1,4 @@
+// components/user-menu.tsx
 'use client';
 
 import Link from 'next/link';
@@ -10,7 +11,8 @@ import {
   Upload,
   Star,
   Handshake,
-  MessageCircle
+  MessageCircle,
+  Shield,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SponsorModal } from './sponsor-modal';
@@ -34,7 +36,9 @@ export function UserMenu() {
         setUser(user);
         const { data: profile } = await supabase
           .from('profiles')
-          .select('username, display_name, avatar_url, is_sponsor')
+          .select(
+            'username, display_name, avatar_url, is_sponsor, is_admin',
+          )
           .eq('id', user.id)
           .single();
         setProfile(profile);
@@ -127,6 +131,9 @@ export function UserMenu() {
                     {profile?.is_sponsor && (
                       <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     )}
+                    {profile?.is_admin && (
+                      <Shield className="h-3 w-3 text-[#6C63FF]" />
+                    )}
                   </div>
                   <div className="text-xs text-white/40">
                     @{profile?.username}
@@ -177,6 +184,19 @@ export function UserMenu() {
                       ? 'Продлить спонсорство'
                       : 'Стать спонсором'}
                   </button>
+
+                  {/* 🎯 Админка — только для админа */}
+                  {profile?.is_admin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-[#B794F6] transition hover:bg-[#6C63FF]/10"
+                    >
+                      <Shield className="h-4 w-4" />
+                      Админка
+                    </Link>
+                  )}
+
                   <Link
                     href="/settings/profile"
                     onClick={() => setOpen(false)}
@@ -201,7 +221,6 @@ export function UserMenu() {
         </AnimatePresence>
       </div>
 
-      {/* Модалка спонсорства */}
       {showSponsor && <SponsorModal onClose={() => setShowSponsor(false)} />}
     </>
   );

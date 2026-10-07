@@ -26,6 +26,7 @@ export function SignUpForm({
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
   const [role, setRole] = useState<Role>('artist');
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -39,7 +40,6 @@ export function SignUpForm({
     setIsLoading(true);
     setError(null);
 
-    // 🎯 Валидация username
     if (!usernameValid) {
       setError(
         'Username: 3–20 символов, только латиница в нижнем регистре, цифры и _.',
@@ -48,7 +48,12 @@ export function SignUpForm({
       return;
     }
 
-    // 🎯 Проверка сложности пароля
+    if (!agreed) {
+      setError('Нужно согласиться с офертой и политикой конфиденциальности');
+      setIsLoading(false);
+      return;
+    }
+
     const strength = checkPasswordStrength(password);
     if (strength.passedCount < 5) {
       setError('Пароль слишком слабый. Выполни все требования.');
@@ -123,7 +128,7 @@ export function SignUpForm({
           </motion.div>
 
           <form onSubmit={handleSignUp} className="space-y-6">
-            {/* ВЫБОР РОЛИ */}
+            {/* РОЛЬ */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -372,6 +377,46 @@ export function SignUpForm({
               )}
             </motion.div>
 
+            {/* ЧЕКБОКС — СОГЛАСИЕ С ОФЕРТОЙ */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.55 }}
+              className="rounded-2xl border border-white/10 bg-white/[0.02] p-4"
+            >
+              <label className="flex cursor-pointer items-start gap-3">
+                <div className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-white/20 bg-white/5 transition checked:border-[#6C63FF] checked:bg-[#6C63FF] focus:outline-none focus:ring-2 focus:ring-[#6C63FF]/30"
+                  />
+                  {agreed && (
+                    <Check className="pointer-events-none absolute h-3 w-3 text-white" />
+                  )}
+                </div>
+                <span className="text-sm leading-relaxed text-white/70">
+                  Я согласен с{' '}
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    className="text-[#B794F6] underline-offset-4 hover:underline"
+                  >
+                    Пользовательским соглашением
+                  </Link>{' '}
+                  и{' '}
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    className="text-[#B794F6] underline-offset-4 hover:underline"
+                  >
+                    Политикой конфиденциальности
+                  </Link>
+                </span>
+              </label>
+            </motion.div>
+
             {/* ОШИБКА */}
             {error && (
               <motion.div
@@ -391,7 +436,7 @@ export function SignUpForm({
             >
               <Button
                 type="submit"
-                disabled={isLoading || !usernameValid}
+                disabled={isLoading || !usernameValid || !agreed}
                 className="group relative w-full overflow-hidden rounded-full border border-white/10 bg-white px-6 py-6 font-semibold text-black shadow-2xl shadow-white/10 transition-all duration-500 hover:scale-[1.02] disabled:opacity-50"
               >
                 <span className="relative z-10 transition-colors duration-500 group-hover:text-white">

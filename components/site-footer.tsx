@@ -1,3 +1,4 @@
+// components/site-footer.tsx
 'use client';
 
 import Link from 'next/link';
@@ -56,43 +57,60 @@ export function SiteFooter() {
             </div>
             <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/feed" className="text-white/60 transition hover:text-white">
+                <Link
+                  href="/feed"
+                  className="text-white/60 transition hover:text-white"
+                >
                   Галерея
                 </Link>
               </li>
               <li>
-                <Link href="/artists" className="text-white/60 transition hover:text-white">
+                <Link
+                  href="/artists"
+                  className="text-white/60 transition hover:text-white"
+                >
                   Художники
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-white/60 transition hover:text-white">
+                <Link
+                  href="/about"
+                  className="text-white/60 transition hover:text-white"
+                >
                   О проекте
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Аккаунт */}
+          {/* Юридическое */}
           <div>
             <div className="mb-4 text-xs uppercase tracking-widest text-white/40">
-              Аккаунт
+              Правовое
             </div>
             <ul className="space-y-3 text-sm">
+              <li>
+                <Link
+                  href="/terms"
+                  className="text-white/60 transition hover:text-white"
+                >
+                  Пользовательское соглашение
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="text-white/60 transition hover:text-white"
+                >
+                  Конфиденциальность
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/auth/login"
                   className="text-white/60 transition hover:text-white"
                 >
                   Войти
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/auth/sign-up"
-                  className="text-white/60 transition hover:text-white"
-                >
-                  Регистрация
                 </Link>
               </li>
             </ul>
