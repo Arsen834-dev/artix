@@ -10,7 +10,6 @@ import {
   LogOut,
   Upload,
   Star,
-  Handshake,
   MessageCircle,
   Shield,
 } from 'lucide-react';
@@ -157,14 +156,6 @@ export function UserMenu() {
                     Опубликовать
                   </Link>
                   <Link
-                    href="/deals"
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
-                  >
-                    <Handshake className="h-4 w-4" />
-                    Мои сделки
-                  </Link>
-                  <Link
                     href="/messages"
                     onClick={() => setOpen(false)}
                     className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
@@ -185,7 +176,6 @@ export function UserMenu() {
                       : 'Стать спонсором'}
                   </button>
 
-                  {/* 🎯 Админка — только для админа */}
                   {profile?.is_admin && (
                     <Link
                       href="/admin"

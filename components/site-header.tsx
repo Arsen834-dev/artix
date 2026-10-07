@@ -16,16 +16,20 @@ import {
   Users,
   Info,
   MessageCircle,
+  Handshake,
 } from 'lucide-react';
 import { UserMenu } from './user-menu';
 import { NotificationsBell } from './notifications-bell';
+import { useUser } from './auth-provider';
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const user = useUser();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isHome = pathname === '/';
+  const isChat = pathname.startsWith('/chat/');
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -37,15 +41,21 @@ export function SiteHeader() {
     setMobileOpen(false);
   }, [pathname]);
 
-  if (isHome) return null;
+  // Не рендерим на главной и в чате
+  if (isHome || isChat) return null;
 
   const navItems = [
     { href: '/feed', label: 'Работы', icon: ImageIcon },
     { href: '/services', label: 'Услуги', icon: Briefcase },
     { href: '/orders', label: 'Заказы', icon: ShoppingBag },
+    { href: '/deals', label: 'Сделки', icon: Handshake, requiresAuth: true },
     { href: '/artists', label: 'Художники', icon: Users },
     { href: '/about', label: 'О проекте', icon: Info },
   ];
+
+  const visibleNavItems = navItems.filter(
+    (item) => !item.requiresAuth || user,
+  );
 
   return (
     <>
@@ -76,7 +86,7 @@ export function SiteHeader() {
 
           {/* НАВИГАЦИЯ — DESKTOP */}
           <nav className="hidden items-center gap-1 md:flex">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const isActive =
                 pathname === item.href || pathname.startsWith(item.href + '/');
               return (
@@ -104,10 +114,8 @@ export function SiteHeader() {
 
           {/* ДЕЙСТВИЯ */}
           <div className="flex items-center gap-2">
-            {/* Уведомления */}
             <NotificationsBell />
 
-            {/* Иконка чата */}
             <Link
               href="/messages"
               className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition hover:border-white/20 hover:text-white"
@@ -116,12 +124,10 @@ export function SiteHeader() {
               <MessageCircle className="h-4 w-4" />
             </Link>
 
-            {/* UserMenu — только desktop */}
             <div className="hidden sm:block">
               <UserMenu />
             </div>
 
-            {/* Кнопка мобильного меню — только mobile */}
             <button
               onClick={() => setMobileOpen((v) => !v)}
               className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition hover:border-white/20 hover:text-white md:hidden"
@@ -177,7 +183,7 @@ export function SiteHeader() {
                     <Home className="h-4 w-4" />
                     Главная
                   </Link>
-                  {navItems.map((item) => {
+                  {visibleNavItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
                     return (

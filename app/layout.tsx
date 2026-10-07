@@ -5,8 +5,7 @@ import './globals.css';
 import { CosmicBackground } from '@/components/cosmic-background';
 import { CustomCursor } from '@/components/custom-cursor';
 import { SmoothScroll } from '@/components/smooth-scroll';
-import { SiteHeader } from '@/components/site-header';
-import { SiteFooter } from '@/components/site-footer';
+import { SiteChrome } from '@/components/site-chrome';
 import { PageTransition } from '@/components/page-transition';
 import { AuthProvider } from '@/components/auth-provider';
 import { OnlineHeartbeat } from '@/components/online-heartbeat';
@@ -78,11 +77,9 @@ export default async function RootLayout({
           <CustomCursor />
           <CosmicBackground />
           <SmoothScroll>
-            <SiteHeader />
-            <main className="relative z-10">
+            <SiteChrome>
               <PageTransition>{children}</PageTransition>
-            </main>
-            <SiteFooter />
+            </SiteChrome>
           </SmoothScroll>
         </AuthProvider>
       </body>

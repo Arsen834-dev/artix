@@ -28,26 +28,6 @@ export function SiteFooter() {
               Космическая галерея художников и их заказчиков. Найди своего
               художника или предложи свои работы вселенной.
             </p>
-            <div className="mt-6 flex gap-3">
-              <a
-                href="#"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/5 bg-white/5 text-white/60 transition hover:border-[#6C63FF]/30 hover:text-white"
-              >
-                <Send className="h-4 w-4" />
-              </a>
-              <a
-                href="#"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/5 bg-white/5 text-white/60 transition hover:border-[#6C63FF]/30 hover:text-white"
-              >
-                <Github className="h-4 w-4" />
-              </a>
-              <a
-                href="#"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/5 bg-white/5 text-white/60 transition hover:border-[#6C63FF]/30 hover:text-white"
-              >
-                <Mail className="h-4 w-4" />
-              </a>
-            </div>
           </div>
 
           {/* Навигация */}
