@@ -68,6 +68,7 @@ export function FeedContent() {
         price: r.price || 0,
         likes_count: r.likes_count || 0,
         category: r.category,
+        is_liked: r.is_liked || false,
         artist: {
           username: r.artist_username,
           display_name: r.artist_display_name,
@@ -113,7 +114,7 @@ export function FeedContent() {
   useEffect(() => {
     if (isLoading || isLoadingMore) return;
     if (artworks.length >= total) return;
-
+    
     const el = loadMoreRef.current;
     if (!el) return;
 

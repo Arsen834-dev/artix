@@ -29,8 +29,6 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isHome = pathname === '/';
-  const isChat = pathname.startsWith('/chat/');
-
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
@@ -42,7 +40,7 @@ export function SiteHeader() {
   }, [pathname]);
 
   // Не рендерим на главной и в чате
-  if (isHome || isChat) return null;
+if (isHome) return null;
 
   const navItems = [
     { href: '/feed', label: 'Работы', icon: ImageIcon },

@@ -11,8 +11,10 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {!isChat && <SiteHeader />}
+      {/* Хедер — везде */}
+      <SiteHeader />
       <main className="relative z-10">{children}</main>
+      {/* Футер — везде, кроме чата */}
       {!isChat && <SiteFooter />}
     </>
   );

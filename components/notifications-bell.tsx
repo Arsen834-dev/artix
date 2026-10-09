@@ -5,7 +5,15 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Check, CheckCheck, Handshake, MessageCircle, Star } from 'lucide-react';
+import {
+  Bell,
+  Check,
+  CheckCheck,
+  Handshake,
+  MessageCircle,
+  Star,
+  X,
+} from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from './auth-provider';
 
@@ -52,7 +60,6 @@ export function NotificationsBell() {
   const [isLoading, setIsLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // 🎯 Загружаем последние 10 уведомлений + счётчик
   useEffect(() => {
     if (!user) {
       setIsLoading(false);
@@ -79,7 +86,6 @@ export function NotificationsBell() {
 
     load();
 
-    // 🎯 Realtime — новые уведомления
     const channel = supabase
       .channel('notifications-bell')
       .on(
@@ -115,10 +121,12 @@ export function NotificationsBell() {
     };
   }, [user]);
 
-  // 🎯 Закрытие по клику вне
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -152,12 +160,40 @@ export function NotificationsBell() {
     }
   };
 
-  // Если не залогинен — не показываем колокольчик
+  // 🎯 Удаление одного уведомления
+  const handleDelete = async (id: number, wasUnread: boolean) => {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    if (wasUnread) {
+      setUnreadCount((c) => Math.max(0, c - 1));
+    }
+  };
+
+  // 🎯 Удалить все
+  const handleDeleteAll = async () => {
+    const supabase = createClient();
+    await supabase
+      .from('notifications')
+      .delete()
+      .eq('user_id', user?.id);
+    setNotifications([]);
+    setUnreadCount(0);
+  };
+
   if (!user) return null;
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* 🎯 Колокольчик */}
       <button
         onClick={() => setOpen((v) => !v)}
         className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition hover:border-white/20 hover:text-white"
@@ -175,7 +211,6 @@ export function NotificationsBell() {
         )}
       </button>
 
-      {/* 🎯 Дропдаун */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -195,14 +230,24 @@ export function NotificationsBell() {
                   </span>
                 )}
               </div>
-              {unreadCount > 0 && (
-                <button
-                  onClick={handleMarkAllRead}
-                  className="text-xs text-white/40 transition hover:text-[#B794F6]"
-                >
-                  Прочитать все
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllRead}
+                    className="text-xs text-white/40 transition hover:text-[#B794F6]"
+                  >
+                    Прочитать
+                  </button>
+                )}
+                {notifications.length > 0 && (
+                  <button
+                    onClick={handleDeleteAll}
+                    className="text-xs text-white/40 transition hover:text-red-400"
+                  >
+                    Очистить
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Список */}
@@ -226,52 +271,67 @@ export function NotificationsBell() {
                   {notifications.map((n) => {
                     const Icon = TYPE_ICONS[n.type] || Bell;
                     return (
-                      <button
+                      <div
                         key={n.id}
-                        onClick={() => handleClickNotification(n)}
-                        className={`flex w-full items-start gap-3 rounded-xl p-3 text-left transition hover:bg-white/5 ${
+                        className={`group relative flex items-start gap-3 rounded-xl p-2 transition hover:bg-white/5 ${
                           !n.is_read ? 'bg-[#6C63FF]/5' : ''
                         }`}
                       >
-                        <div
-                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                            !n.is_read
-                              ? 'bg-[#6C63FF]/20 text-[#B794F6]'
-                              : 'bg-white/5 text-white/50'
-                          }`}
+                        <button
+                          onClick={() => handleClickNotification(n)}
+                          className="flex flex-1 items-start gap-3 text-left"
                         >
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0 flex-1">
                           <div
-                            className={`text-sm ${
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
                               !n.is_read
-                                ? 'font-semibold text-white'
-                                : 'text-white/70'
+                                ? 'bg-[#6C63FF]/20 text-[#B794F6]'
+                                : 'bg-white/5 text-white/50'
                             }`}
                           >
-                            {n.title}
+                            <Icon className="h-4 w-4" />
                           </div>
-                          {n.message && (
-                            <div className="mt-0.5 line-clamp-2 text-xs text-white/50">
-                              {n.message}
+                          <div className="min-w-0 flex-1">
+                            <div
+                              className={`text-sm ${
+                                !n.is_read
+                                  ? 'font-semibold text-white'
+                                  : 'text-white/70'
+                              }`}
+                            >
+                              {n.title}
                             </div>
-                          )}
-                          <div className="mt-1 text-[10px] text-white/30">
-                            {timeAgo(n.created_at)}
+                            {n.message && (
+                              <div className="mt-0.5 line-clamp-2 text-xs text-white/50">
+                                {n.message}
+                              </div>
+                            )}
+                            <div className="mt-1 text-[10px] text-white/30">
+                              {timeAgo(n.created_at)}
+                            </div>
                           </div>
-                        </div>
-                        {!n.is_read && (
-                          <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#6C63FF]" />
-                        )}
-                      </button>
+                          {!n.is_read && (
+                            <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#6C63FF]" />
+                          )}
+                        </button>
+
+                        {/* 🎯 Кнопка удаления — при hover */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(n.id, !n.is_read);
+                          }}
+                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white/30 opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
+                          aria-label="Удалить"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
               )}
             </div>
 
-            {/* Footer */}
             {notifications.length > 0 && (
               <Link
                 href="/notifications"
