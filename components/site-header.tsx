@@ -47,7 +47,7 @@ if (isHome) return null;
     { href: '/services', label: 'Услуги', icon: Briefcase },
     { href: '/orders', label: 'Заказы', icon: ShoppingBag },
     { href: '/deals', label: 'Сделки', icon: Handshake, requiresAuth: true },
-    { href: '/artists', label: 'Художники', icon: Users },
+    { href: '/artist', label: 'Художники', icon: Users },
     { href: '/about', label: 'О проекте', icon: Info },
   ];
 
