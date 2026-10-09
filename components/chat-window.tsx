@@ -54,11 +54,6 @@ function getSupabase() {
   return supabaseClient;
 }
 
-/**
- * Получить отображаемый URL для картинки.
- * - Если это полный http(s) URL — старые данные, используем как есть.
- * - Если это path (chatId/file.jpg) — генерируем signed URL.
- */
 async function resolveImageUrl(raw: string): Promise<string> {
   if (!raw) return raw;
   if (raw.startsWith('http://') || raw.startsWith('https://')) {
@@ -72,7 +67,7 @@ async function resolveImageUrl(raw: string): Promise<string> {
 }
 
 /**
- * 🎯 Дата сообщения: «Сегодня», «Вчера», «12 октября», «12 окт 2025»
+ * 🎯 Дата сообщения: «Сегодня», «Вчера», «Понедельник», «12 октября»
  */
 function formatMessageDate(dateString: string): string {
   const date = new Date(dateString);
@@ -98,8 +93,64 @@ function formatMessageDate(dateString: string): string {
 }
 
 /**
- * 🎯 Одна ли это дата
+ * 🎯 Умный формат для строки сообщения:
+ *  - сегодня → "12:30"
+ *  - вчера → "12:30 · вчера"
+ *  - эта неделя → "12:30 · пн"
+ *  - старше → "12:30 · 12 окт"
+ *  - прошлый год → "12:30 · 12 окт 2025"
  */
+function formatMessageTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+
+  const time = date.toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const diffDays = Math.floor(
+    (today.getTime() - msgDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  if (diffDays === 0) return time;
+  if (diffDays === 1) return `${time} · вчера`;
+  if (diffDays < 7) {
+    const weekday = date.toLocaleDateString('ru-RU', { weekday: 'short' });
+    return `${time} · ${weekday}`;
+  }
+  if (date.getFullYear() === now.getFullYear()) {
+    const day = date.toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'short',
+    });
+    return `${time} · ${day}`;
+  }
+  const day = date.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  return `${time} · ${day}`;
+}
+
+/**
+ * 🎯 Полная дата для tooltip (title)
+ */
+function formatFullDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 function isSameDay(a: string, b: string): boolean {
   const da = new Date(a);
   const db = new Date(b);
@@ -149,7 +200,6 @@ export function ChatWindow({
     ReturnType<typeof getSupabase>['channel']
   > | null>(null);
 
-  // 🎯 Резолвим signed URL для всех картинок
   useEffect(() => {
     let mounted = true;
     const toResolve = messages
@@ -204,7 +254,7 @@ export function ChatWindow({
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 🎯 Realtime — новые сообщения
+  // Realtime — новые сообщения
   useEffect(() => {
     const supabase = getSupabase();
 
@@ -237,13 +287,12 @@ export function ChatWindow({
     };
   }, [chatId, userId]);
 
-  // 🎯 Помечаем прочитанным при открытии
   useEffect(() => {
     const supabase = getSupabase();
     supabase.rpc('mark_chat_messages_read', { p_chat_id: chatId });
   }, [chatId]);
 
-  // 🎯 Индикатор «печатает»
+  // Индикатор «печатает»
   useEffect(() => {
     const supabase = getSupabase();
 
@@ -276,7 +325,7 @@ export function ChatWindow({
     };
   }, [chatId, userId]);
 
-  // 🎯 Закрыть эмодзи-пикер при клике вне
+  // Закрыть эмодзи-пикер при клике вне
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -498,16 +547,17 @@ export function ChatWindow({
             const showAvatar =
               !isMine && (!prevMsg || prevMsg.sender_id !== msg.sender_id);
 
-            // 🎯 Разделитель дат
             const showDateDivider =
               !prevMsg || !isSameDay(prevMsg.created_at, msg.created_at);
 
-            // 🎯 «Последнее в группе» — для скругления
             const isLastInGroup =
               !nextMsg || nextMsg.sender_id !== msg.sender_id;
 
             const isImage = msg.message_type === 'image' && msg.image_url;
             const displayUrl = isImage ? getDisplayUrl(msg.image_url) : null;
+
+            const timeLabel = formatMessageTime(msg.created_at);
+            const fullDate = formatFullDate(msg.created_at);
 
             return (
               <div key={msg.id}>
@@ -526,6 +576,7 @@ export function ChatWindow({
                   className={`mb-1 flex items-end gap-2 ${
                     isMine ? 'justify-end' : 'justify-start'
                   }`}
+                  title={fullDate}
                 >
                   {!isMine && showAvatar && (
                     <div className="shrink-0">
@@ -561,10 +612,7 @@ export function ChatWindow({
                         </div>
                       )}
                       <div className="absolute bottom-1 right-2 rounded bg-black/60 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur">
-                        {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {timeLabel}
                       </div>
                     </div>
                   ) : (
@@ -583,10 +631,7 @@ export function ChatWindow({
                           isMine ? 'text-white/60' : 'text-white/30'
                         }`}
                       >
-                        {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {timeLabel}
                       </div>
                     </div>
                   )}
