@@ -7,6 +7,7 @@ import { ArrowLeft, Heart, Star, MessageCircle, Eye, Tag } from 'lucide-react';
 import { LikeButton } from './like-button';
 import { DeleteButton } from './delete-button';
 import { getCategoryLabel } from '@/lib/constants';
+import { ArtworkComments } from './artwork-comments';
 
 type Artwork = {
   id: number;
@@ -224,7 +225,11 @@ export function ArtworkPageContent({
           )}
         </div>
       </motion.div>
-
+            {/* 🎯 Комментарии */}
+      <ArtworkComments
+        artworkId={artwork.id}
+        artworkOwnerId={artwork.artist.id}
+      />
       {similar.length > 0 && (
         <div className="mt-20">
           <h2 className="display-title mb-8 text-3xl font-bold text-white md:text-4xl">
