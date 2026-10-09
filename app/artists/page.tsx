@@ -19,7 +19,6 @@ type ArtistRow = {
 async function ArtistsList() {
   const supabase = await createClient();
 
-  // 🎯 Загружаем художников
   const { data: profiles, error } = await supabase
     .from('profiles')
     .select('id, username, display_name, avatar_url, bio, is_sponsor, role')
@@ -45,7 +44,6 @@ async function ArtistsList() {
     );
   }
 
-  // 🎯 Загружаем рейтинги одним запросом
   const artistIds = profiles.map((p) => p.id);
   const { data: ratings } = await supabase.rpc('get_artists_ratings', {
     p_artist_ids: artistIds,
@@ -59,7 +57,6 @@ async function ArtistsList() {
     });
   });
 
-  // 🎯 Объединяем и сортируем: с рейтингом → без рейтинга
   const artists: ArtistRow[] = profiles
     .map((p) => {
       const r = ratingsMap.get(p.id);
@@ -70,15 +67,9 @@ async function ArtistsList() {
       };
     })
     .sort((a, b) => {
-      // Спонсоры — наверх
-      if (a.is_sponsor !== b.is_sponsor) {
-        return a.is_sponsor ? -1 : 1;
-      }
-      // У кого больше отзывов — выше
-      if (a.reviews_count !== b.reviews_count) {
+      if (a.is_sponsor !== b.is_sponsor) return a.is_sponsor ? -1 : 1;
+      if (a.reviews_count !== b.reviews_count)
         return b.reviews_count - a.reviews_count;
-      }
-      // У кого выше рейтинг — выше
       return b.avg_rating - a.avg_rating;
     });
 
@@ -118,7 +109,6 @@ async function ArtistsList() {
               </h3>
               <p className="mt-1 text-sm text-white/40">@{artist.username}</p>
 
-              {/* 🎯 Рейтинг */}
               <div className="mt-3 flex items-center justify-center gap-2">
                 {artist.reviews_count > 0 ? (
                   <>
@@ -143,7 +133,9 @@ async function ArtistsList() {
                     </span>
                   </>
                 ) : (
-                  <span className="text-xs text-white/30">Пока нет отзывов</span>
+                  <span className="text-xs text-white/30">
+                    Пока нет отзывов
+                  </span>
                 )}
               </div>
 
