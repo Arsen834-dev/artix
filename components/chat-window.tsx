@@ -45,7 +45,7 @@ const EMOJIS = [
 
 const SIGNED_URL_TTL = 60 * 60 * 24 * 7; // 7 дней
 
-// 🎯 Создаём supabase-клиент один раз на модуль
+// 🎯 supabase-клиент — singleton
 let supabaseClient: ReturnType<typeof createClient> | null = null;
 function getSupabase() {
   if (!supabaseClient) {
@@ -71,6 +71,45 @@ async function resolveImageUrl(raw: string): Promise<string> {
   return data?.signedUrl || raw;
 }
 
+/**
+ * 🎯 Дата сообщения: «Сегодня», «Вчера», «12 октября», «12 окт 2025»
+ */
+function formatMessageDate(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const diffDays = Math.floor(
+    (today.getTime() - msgDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  if (diffDays === 0) return 'Сегодня';
+  if (diffDays === 1) return 'Вчера';
+  if (diffDays < 7) {
+    const weekday = date.toLocaleDateString('ru-RU', { weekday: 'long' });
+    return weekday.charAt(0).toUpperCase() + weekday.slice(1);
+  }
+  return date.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  });
+}
+
+/**
+ * 🎯 Одна ли это дата
+ */
+function isSameDay(a: string, b: string): boolean {
+  const da = new Date(a);
+  const db = new Date(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
+}
+
 export function ChatWindow({
   chatId,
   userId,
@@ -91,7 +130,6 @@ export function ChatWindow({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // 🎯 Кеш signed URL: raw → displayUrl
   const [imageUrlCache, setImageUrlCache] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -187,7 +225,6 @@ export function ChatWindow({
             return [...prev, newMessage];
           });
 
-          // 🎯 Если это чужое сообщение — помечаем прочитанным
           if (newMessage.sender_id !== userId) {
             supabase.rpc('mark_chat_messages_read', { p_chat_id: chatId });
           }
@@ -200,13 +237,13 @@ export function ChatWindow({
     };
   }, [chatId, userId]);
 
-  // 🎯 Помечаем прочитанным при открытии чата
+  // 🎯 Помечаем прочитанным при открытии
   useEffect(() => {
     const supabase = getSupabase();
     supabase.rpc('mark_chat_messages_read', { p_chat_id: chatId });
   }, [chatId]);
 
-  // 🎯 Индикатор «печатает» — канал в useRef, один раз
+  // 🎯 Индикатор «печатает»
   useEffect(() => {
     const supabase = getSupabase();
 
@@ -256,7 +293,6 @@ export function ChatWindow({
     }
   }, [showEmojiPicker]);
 
-  // 🎯 Отправка текста
   const handleSend = async () => {
     const trimmed = text.trim();
     if (!trimmed || isSending) return;
@@ -303,7 +339,6 @@ export function ChatWindow({
     }
   };
 
-  // 🎯 Отправка картинки
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -322,7 +357,6 @@ export function ChatWindow({
     try {
       const supabase = getSupabase();
       const fileExt = file.name.split('.').pop();
-      // 🎯 Храним PATH, а не URL
       const filePath = `${chatId}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
@@ -331,7 +365,6 @@ export function ChatWindow({
 
       if (uploadError) throw uploadError;
 
-      // 🎯 В БД сохраняем PATH. Signed URL сгенерируем при рендере.
       const { data, error } = await supabase
         .from('messages')
         .insert({
@@ -356,7 +389,6 @@ export function ChatWindow({
     }
   };
 
-  // 🎯 Вставка смайлика
   const insertEmoji = (emoji: string) => {
     const input = inputRef.current;
     if (!input) return;
@@ -372,7 +404,6 @@ export function ChatWindow({
     }, 0);
   };
 
-  // 🎯 Broadcast «печатает» — через useRef-канал
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
 
@@ -390,7 +421,6 @@ export function ChatWindow({
     }
   };
 
-  // 🎯 Получить отображаемый URL картинки
   const getDisplayUrl = (raw: string | null): string | null => {
     if (!raw) return null;
     if (raw.startsWith('http')) return raw;
@@ -450,7 +480,7 @@ export function ChatWindow({
 
       {/* MESSAGES */}
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto">
-        <div className="container mx-auto max-w-3xl space-y-3 px-4 py-6">
+        <div className="container mx-auto max-w-3xl px-4 py-6">
           {messages.length === 0 && (
             <div className="py-20 text-center">
               <div className="mb-4 text-5xl">💬</div>
@@ -464,85 +494,104 @@ export function ChatWindow({
           {messages.map((msg, i) => {
             const isMine = msg.sender_id === userId;
             const prevMsg = messages[i - 1];
+            const nextMsg = messages[i + 1];
             const showAvatar =
               !isMine && (!prevMsg || prevMsg.sender_id !== msg.sender_id);
+
+            // 🎯 Разделитель дат
+            const showDateDivider =
+              !prevMsg || !isSameDay(prevMsg.created_at, msg.created_at);
+
+            // 🎯 «Последнее в группе» — для скругления
+            const isLastInGroup =
+              !nextMsg || nextMsg.sender_id !== msg.sender_id;
+
             const isImage = msg.message_type === 'image' && msg.image_url;
             const displayUrl = isImage ? getDisplayUrl(msg.image_url) : null;
 
             return (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className={`flex items-end gap-2 ${
-                  isMine ? 'justify-end' : 'justify-start'
-                }`}
-              >
-                {!isMine && showAvatar && (
-                  <div className="shrink-0">
-                    {other.avatar_url ? (
-                      <img
-                        src={other.avatar_url}
-                        alt=""
-                        className="h-7 w-7 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-[10px] font-bold text-white">
-                        {other.display_name[0]?.toUpperCase()}
-                      </div>
-                    )}
+              <div key={msg.id}>
+                {showDateDivider && (
+                  <div className="my-6 flex items-center justify-center">
+                    <div className="rounded-full border border-white/5 bg-white/[0.03] px-4 py-1.5 text-xs font-medium text-white/50 backdrop-blur">
+                      {formatMessageDate(msg.created_at)}
+                    </div>
                   </div>
                 )}
-                {!isMine && !showAvatar && <div className="w-7" />}
 
-                {isImage ? (
-                  <div
-                    className="group relative max-w-[60%] cursor-pointer overflow-hidden rounded-2xl border border-white/10"
-                    onClick={() => displayUrl && setPreviewImage(displayUrl)}
-                  >
-                    {displayUrl ? (
-                      <img
-                        src={displayUrl}
-                        alt=""
-                        className="max-h-80 w-full object-cover transition group-hover:opacity-90"
-                      />
-                    ) : (
-                      <div className="flex h-40 w-60 items-center justify-center bg-white/5">
-                        <Loader2 className="h-6 w-6 animate-spin text-white/40" />
-                      </div>
-                    )}
-                    <div className="absolute bottom-1 right-2 rounded bg-black/60 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur">
-                      {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className={`mb-1 flex items-end gap-2 ${
+                    isMine ? 'justify-end' : 'justify-start'
+                  }`}
+                >
+                  {!isMine && showAvatar && (
+                    <div className="shrink-0">
+                      {other.avatar_url ? (
+                        <img
+                          src={other.avatar_url}
+                          alt=""
+                          className="h-7 w-7 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-[10px] font-bold text-white">
+                          {other.display_name[0]?.toUpperCase()}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ) : (
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
-                      isMine
-                        ? 'rounded-br-sm bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-white'
-                        : 'rounded-bl-sm border border-white/5 bg-[#16161f]/80 text-white/90'
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">
-                      {msg.text || ''}
-                    </p>
+                  )}
+                  {!isMine && !showAvatar && <div className="w-7" />}
+
+                  {isImage ? (
                     <div
-                      className={`mt-1 text-[10px] ${
-                        isMine ? 'text-white/60' : 'text-white/30'
-                      }`}
+                      className="group relative max-w-[60%] cursor-pointer overflow-hidden rounded-2xl border border-white/10"
+                      onClick={() => displayUrl && setPreviewImage(displayUrl)}
                     >
-                      {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {displayUrl ? (
+                        <img
+                          src={displayUrl}
+                          alt=""
+                          className="max-h-80 w-full object-cover transition group-hover:opacity-90"
+                        />
+                      ) : (
+                        <div className="flex h-40 w-60 items-center justify-center bg-white/5">
+                          <Loader2 className="h-6 w-6 animate-spin text-white/40" />
+                        </div>
+                      )}
+                      <div className="absolute bottom-1 right-2 rounded bg-black/60 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur">
+                        {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </motion.div>
+                  ) : (
+                    <div
+                      className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
+                        isMine
+                          ? 'bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-white'
+                          : 'border border-white/5 bg-[#16161f]/80 text-white/90'
+                      } ${isLastInGroup ? (isMine ? 'rounded-br-sm' : 'rounded-bl-sm') : ''}`}
+                    >
+                      <p className="whitespace-pre-wrap break-words">
+                        {msg.text || ''}
+                      </p>
+                      <div
+                        className={`mt-1 text-[10px] ${
+                          isMine ? 'text-white/60' : 'text-white/30'
+                        }`}
+                      >
+                        {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </div>
             );
           })}
 
@@ -550,7 +599,7 @@ export function ChatWindow({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex items-end gap-2"
+              className="mt-1 flex items-end gap-2"
             >
               {other.avatar_url && (
                 <img
@@ -652,7 +701,8 @@ export function ChatWindow({
               <Smile className="h-5 w-5" />
             </button>
 
-            <button              onClick={() => fileInputRef.current?.click()}
+            <button
+              onClick={() => fileInputRef.current?.click()}
               disabled={uploadingImage}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
               aria-label="Картинка"
