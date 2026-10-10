@@ -12,6 +12,7 @@ import {
   Star,
   MessageCircle,
   Shield,
+  Crown,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SponsorModal } from './sponsor-modal';
@@ -83,29 +84,50 @@ export function UserMenu() {
     );
   }
 
+  const isSponsor = profile?.is_sponsor;
+
   return (
     <>
       <div className="relative">
         <button
           onClick={() => setOpen((v) => !v)}
-          className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 transition hover:border-white/20"
+          className={`flex items-center gap-2 rounded-full border bg-white/[0.03] px-2 py-1 transition ${
+            isSponsor
+              ? 'border-yellow-400/40 hover:border-yellow-400/60'
+              : 'border-white/10 hover:border-white/20'
+          }`}
         >
           {profile?.avatar_url ? (
             <img
               src={profile.avatar_url}
               alt={profile.display_name}
-              className="h-7 w-7 rounded-full object-cover"
+              className={`h-7 w-7 rounded-full object-cover ${
+                isSponsor ? 'ring-2 ring-yellow-400' : ''
+              }`}
             />
           ) : (
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-xs font-bold text-white">
+            <div
+              className={`flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-xs font-bold text-white ${
+                isSponsor ? 'ring-2 ring-yellow-400' : ''
+              }`}
+            >
               {profile?.display_name?.[0]?.toUpperCase() || '?'}
             </div>
           )}
-          <span className="hidden text-sm font-medium text-white/80 sm:block">
+          <span
+            className={`hidden text-sm font-medium sm:block ${
+              isSponsor ? 'text-yellow-300' : 'text-white/80'
+            }`}
+          >
             {profile?.display_name || 'Профиль'}
           </span>
-          {profile?.is_sponsor && (
-            <Star className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />
+          {isSponsor && (
+            <motion.div
+              animate={{ scale: [1, 1.15, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Star className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />
+            </motion.div>
           )}
         </button>
 
@@ -120,15 +142,23 @@ export function UserMenu() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-2xl border border-white/10 bg-[#16161f]/95 backdrop-blur-xl"
+                className={`absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-2xl border backdrop-blur-xl ${
+                  isSponsor
+                    ? 'border-yellow-400/30 bg-[#1a1520]/95'
+                    : 'border-white/10 bg-[#16161f]/95'
+                }`}
               >
                 <div className="border-b border-white/5 p-4">
                   <div className="flex items-center gap-2">
-                    <div className="font-semibold text-white">
+                    <div
+                      className={`font-semibold ${
+                        isSponsor ? 'text-yellow-300' : 'text-white'
+                      }`}
+                    >
                       {profile?.display_name}
                     </div>
-                    {profile?.is_sponsor && (
-                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    {isSponsor && (
+                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
                     )}
                     {profile?.is_admin && (
                       <Shield className="h-3 w-3 text-[#6C63FF]" />
@@ -170,10 +200,8 @@ export function UserMenu() {
                     }}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-yellow-400 transition hover:bg-yellow-400/10"
                   >
-                    <Star className="h-4 w-4" />
-                    {profile?.is_sponsor
-                      ? 'Продлить спонсорство'
-                      : 'Стать спонсором'}
+                    <Crown className="h-4 w-4" />
+                    {isSponsor ? 'Продлить спонсорство' : 'Стать спонсором'}
                   </button>
 
                   {profile?.is_admin && (

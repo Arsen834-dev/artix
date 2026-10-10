@@ -53,6 +53,8 @@ function MasonryCard({
     setRotate({ x: 0, y: 0 });
   };
 
+  const isSponsor = artwork.artist.is_sponsor;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -71,7 +73,11 @@ function MasonryCard({
             transition: 'transform 0.15s ease-out',
             transformStyle: 'preserve-3d',
           }}
-          className="group relative overflow-hidden rounded-3xl border border-white/5 bg-[#16161f]/60 backdrop-blur-sm transition-shadow duration-500 hover:shadow-2xl hover:shadow-[#6C63FF]/20"
+          className={`group relative overflow-hidden rounded-3xl border bg-[#16161f]/60 backdrop-blur-sm transition-shadow duration-500 hover:shadow-2xl ${
+            isSponsor
+              ? 'border-yellow-400/30 hover:border-yellow-400/60 hover:shadow-yellow-400/20'
+              : 'border-white/5 hover:shadow-[#6C63FF]/20'
+          }`}
         >
           <div className="relative w-full overflow-hidden">
             <img
@@ -87,7 +93,7 @@ function MasonryCard({
               {getCategoryLabel(artwork.category)}
             </span>
 
-            {artwork.artist.is_sponsor && (
+            {isSponsor && (
               <span className="pointer-events-none absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 px-2 py-0.5 text-[10px] font-bold text-black shadow-lg shadow-yellow-400/40">
                 <Star className="h-2.5 w-2.5 fill-current" />
                 PRO
@@ -116,15 +122,25 @@ function MasonryCard({
                   <img
                     src={artwork.artist.avatar_url}
                     alt=""
-                    className="h-5 w-5 rounded-full object-cover ring-2 ring-white/30"
+                    className={`h-5 w-5 rounded-full object-cover ${
+                      isSponsor ? 'ring-2 ring-yellow-400/60' : 'ring-2 ring-white/30'
+                    }`}
                   />
                 ) : (
-                  <div className="h-5 w-5 rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6]" />
+                  <div
+                    className={`h-5 w-5 rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] ${
+                      isSponsor ? 'ring-2 ring-yellow-400/60' : ''
+                    }`}
+                  />
                 )}
-                <span className="text-xs text-white/70">
+                <span
+                  className={`text-xs ${
+                    isSponsor ? 'text-yellow-300' : 'text-white/70'
+                  }`}
+                >
                   {artwork.artist.display_name}
                 </span>
-                {artwork.artist.is_sponsor && (
+                {isSponsor && (
                   <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
                 )}
                 {artwork.price > 0 && (

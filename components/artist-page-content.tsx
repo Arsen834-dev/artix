@@ -23,6 +23,7 @@ import {
   Users,
   MessageSquare,
   Settings,
+  Crown,
   type LucideIcon,
 } from 'lucide-react';
 import { StartChatButton } from './start-chat-button';
@@ -355,7 +356,11 @@ export function ArtistPageContent({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative mb-8 overflow-hidden rounded-3xl border border-white/10 bg-[#16161f]/60 backdrop-blur-sm"
+        className={`relative mb-8 overflow-hidden rounded-3xl border bg-[#16161f]/60 backdrop-blur-sm ${
+          profile.is_sponsor
+            ? 'border-yellow-400/30 shadow-lg shadow-yellow-400/10'
+            : 'border-white/10'
+        }`}
       >
         <div className="relative h-48 md:h-64">
           {profile.cover_url ? (
@@ -370,37 +375,74 @@ export function ArtistPageContent({
 
         <div className="relative -mt-20 px-8 pb-8 md:-mt-24 md:px-12 md:pb-12">
           <div className="flex flex-col items-center gap-8 md:flex-row md:items-end">
+            {/* 🎯 АВАТАР — золотая обводка если спонсор */}
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               className="relative shrink-0"
             >
-              <div className="absolute inset-0 scale-110 rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] opacity-50 blur-2xl" />
+              <div
+                className={`absolute inset-0 scale-110 rounded-full opacity-50 blur-2xl ${
+                  profile.is_sponsor
+                    ? 'bg-gradient-to-br from-yellow-400 to-orange-400'
+                    : 'bg-gradient-to-br from-[#6C63FF] to-[#B794F6]'
+                }`}
+              />
+
               {profile.avatar_url ? (
                 <img
                   src={profile.avatar_url}
                   alt={profile.display_name}
-                  className="relative h-32 w-32 rounded-full border-4 border-[#16161f] object-cover shadow-2xl md:h-40 md:w-40"
+                  className={`relative h-32 w-32 rounded-full object-cover shadow-2xl md:h-40 md:w-40 ${
+                    profile.is_sponsor
+                      ? 'border-4 border-yellow-400'
+                      : 'border-4 border-[#16161f]'
+                  }`}
                 />
               ) : (
-                <div className="relative flex h-32 w-32 items-center justify-center rounded-full border-4 border-[#16161f] bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-5xl font-bold text-white md:h-40 md:w-40">
+                <div
+                  className={`relative flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-5xl font-bold text-white md:h-40 md:w-40 ${
+                    profile.is_sponsor
+                      ? 'border-4 border-yellow-400'
+                      : 'border-4 border-[#16161f]'
+                  }`}
+                >
                   {profile.display_name[0]?.toUpperCase()}
                 </div>
               )}
+
+              {/* 🎯 Корона с пульсом */}
               {profile.is_sponsor && (
-                <div className="absolute -right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/50">
-                  <Star className="h-5 w-5 fill-black text-black" />
-                </div>
+                <motion.div
+                  animate={{ scale: [1, 1.08, 1] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 shadow-2xl shadow-yellow-400/60"
+                >
+                  <Crown className="h-5 w-5 fill-black text-black" />
+                </motion.div>
               )}
             </motion.div>
 
             <div className="flex-1 text-center md:pb-2 md:text-left">
+              {/* 🎯 ИМЯ — золотой градиент если спонсор */}
               <motion.h1
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="display-title text-4xl font-bold text-white md:text-5xl"
+                className="display-title text-4xl font-bold md:text-5xl"
+                style={
+                  profile.is_sponsor
+                    ? {
+                        background:
+                          'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        filter: 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.3))',
+                      }
+                    : { color: 'white' }
+                }
               >
                 {profile.display_name}
               </motion.h1>
@@ -424,11 +466,16 @@ export function ArtistPageContent({
                     Заказчик
                   </span>
                 )}
+                {/* 🎯 Бейдж PRO */}
                 {profile.is_sponsor && (
-                  <span className="flex items-center gap-1 rounded-full bg-yellow-400/20 px-3 py-1 text-xs font-medium text-yellow-400">
-                    <Star className="h-3 w-3 fill-current" />
-                    Спонсор
-                  </span>
+                  <motion.span
+                    animate={{ scale: [1, 1.04, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="flex items-center gap-1 rounded-full border border-yellow-400/40 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 px-3 py-1 text-xs font-bold text-yellow-300 shadow-lg shadow-yellow-400/20"
+                  >
+                    <Crown className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    PRO
+                  </motion.span>
                 )}
               </motion.div>
 
