@@ -79,11 +79,14 @@ export function DealsList({
                   <span className="text-xs text-white/40">
                     {deal.isClient ? 'Художник' : 'Заказчик'}:
                   </span>
-                  <span className="text-xs font-medium text-white/70">
+                  <span
+                    className={`text-xs font-medium ${
+                      otherPerson?.is_sponsor ? 'gradient-text-gold' : 'text-white/70'
+                    }`}
+                  >
                     {otherPerson?.display_name}
-                  </span>
+                  </span> 
                 </div>
-
                 <div className="mt-4 flex items-end justify-between border-t border-white/5 pt-4">
                   <div>
                     <div className="text-xs text-white/40">Сумма сделки</div>

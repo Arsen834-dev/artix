@@ -120,9 +120,13 @@ export function ServicesGrid({ services }: { services: Service[] }) {
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
-                      <span className="truncate text-sm font-medium text-white/80">
-                        {service.artist.display_name}
-                      </span>
+                    <span
+                      className={`truncate text-sm font-medium ${
+                        service.artist.is_sponsor ? 'gradient-text-gold' : 'text-white/80'
+                      }`}
+                    >
+                      {service.artist.display_name}
+                    </span>
                       {service.artist.is_sponsor && (
                         <Star className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />
                       )}

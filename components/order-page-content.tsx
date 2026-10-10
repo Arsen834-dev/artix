@@ -265,9 +265,13 @@ export function OrderPageContent({
                             )}
                             <div>
                               <div className="flex items-center gap-1.5">
-                                <span className="font-semibold text-white">
-                                  {response.artist.display_name}
-                                </span>
+                              <span
+                                className={`font-semibold ${
+                                  response.artist.is_sponsor ? 'gradient-text-gold' : 'text-white'
+                                }`}
+                              >
+                                {response.artist.display_name}
+                              </span>
                                 {response.artist.is_sponsor && (
                                   <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                                 )}

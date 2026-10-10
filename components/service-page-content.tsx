@@ -219,9 +219,13 @@ export function ServicePageContent({
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="truncate font-semibold text-white">
-                      {service.artist.display_name}
-                    </span>
+                  <span
+                    className={`truncate font-semibold ${
+                      service.artist.is_sponsor ? 'gradient-text-gold' : 'text-white'
+                    }`}
+                  >
+                    {service.artist.display_name}
+                  </span>
                     {service.artist.is_sponsor && (
                       <Star className="h-3.5 w-3.5 shrink-0 fill-yellow-400 text-yellow-400" />
                     )}
@@ -292,7 +296,11 @@ export function ServicePageContent({
                         ) : (
                           <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6]" />
                         )}
-                        <span className="text-sm text-white/50">
+                        <span
+                          className={`text-sm ${
+                            item.artist.is_sponsor ? 'gradient-text-gold' : 'text-white/50'
+                          }`}
+                        >
                           {item.artist.display_name}
                         </span>
                       </div>

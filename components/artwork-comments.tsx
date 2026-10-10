@@ -361,9 +361,13 @@ export function ArtworkComments({
                             ? `/artist/${comment.author.username}`
                             : '#'
                         }
-                        className="text-sm font-semibold text-white hover:text-[#B794F6]"
+                        className={`text-sm font-semibold ${
+                          comment.author?.is_sponsor
+                            ? 'gradient-text-gold'
+                            : 'text-white hover:text-[#B794F6]'
+                        }`}
                       >
-                        {comment.author?.display_name || 'Пользователь'}
+                          {comment.author?.display_name || 'Пользователь'}
                       </Link>
                       {comment.author?.is_sponsor && (
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />

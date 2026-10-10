@@ -508,9 +508,15 @@ export function ChatWindow({
             </div>
             <div>
               <div className="flex items-center gap-1">
-                <span className="font-semibold text-white transition group-hover:text-[#B794F6]">
-                  {other.display_name}
-                </span>
+              <span
+                className={`font-semibold transition ${
+                  other.is_sponsor
+                    ? 'gradient-text-gold'
+                    : 'text-white group-hover:text-[#B794F6]'
+                }`}
+              >
+                {other.display_name}
+              </span>
                 {other.is_sponsor && (
                   <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                 )}

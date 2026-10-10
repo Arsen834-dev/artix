@@ -24,8 +24,8 @@ async function DealsContent() {
     .select(`
       id, title, description, amount,
       status, created_at,
-      client:profiles!deals_client_id_fkey (id, username, display_name, avatar_url),
-      artist:profiles!deals_artist_id_fkey (id, username, display_name, avatar_url)
+      client:profiles!deals_client_id_fkey (id, username, display_name, avatar_url, is_sponsor),
+      artist:profiles!deals_artist_id_fkey (id, username, display_name, avatar_url, is_sponsor)
     `)
     .or(`client_id.eq.${user.id},artist_id.eq.${user.id}`)
     .order('created_at', { ascending: false });

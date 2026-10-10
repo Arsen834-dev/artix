@@ -116,9 +116,13 @@ export function OrdersGrid({ orders }: { orders: Order[] }) {
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1">
-                        <span className="truncate text-sm font-medium text-white/80">
-                          {order.client.display_name}
-                        </span>
+                      <span
+                        className={`truncate text-sm font-medium ${
+                          order.client.is_sponsor ? 'gradient-text-gold' : 'text-white/80'
+                        }`}
+                      >
+                        {order.client.display_name}
+                      </span>
                         {order.client.is_sponsor && (
                           <Star className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />
                         )}

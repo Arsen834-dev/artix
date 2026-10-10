@@ -196,9 +196,13 @@ export function ArtworkPageContent({
               )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="truncate font-semibold text-white">
-                    {artwork.artist.display_name}
-                  </span>
+                <span
+                  className={`truncate font-semibold ${
+                    artwork.artist.is_sponsor ? 'gradient-text-gold' : 'text-white'
+                  }`}
+                >
+                  {artwork.artist.display_name}
+                </span>
                   {artwork.artist.is_sponsor && (
                     <Star className="h-3.5 w-3.5 shrink-0 fill-yellow-400 text-yellow-400" />
                   )}
@@ -254,9 +258,13 @@ export function ArtworkPageContent({
                     {item.title}
                   </h3>
                   <div className="mt-1 flex items-center justify-between text-xs">
-                    <span className="truncate text-white/40">
-                      {item.artist.display_name}
-                    </span>
+                  <span
+                    className={`truncate ${
+                      item.artist.is_sponsor ? 'gradient-text-gold' : 'text-white/40'
+                    }`}
+                  >
+                    {item.artist.display_name}
+                  </span>
                     {item.price > 0 && (
                       <span className="gradient-text font-bold">
                         от {item.price.toLocaleString('ru-RU')}₽

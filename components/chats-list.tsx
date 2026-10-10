@@ -49,6 +49,7 @@ export function ChatsList({
         const hasUnread = chat.unread > 0;
         const isMineLast = chat.last_sender_id === currentUserId;
         const isReadByOther = chat.is_read;
+        const isSponsor = chat.other.is_sponsor;
 
         return (
           <motion.div
@@ -70,12 +71,20 @@ export function ChatsList({
                     <img
                       src={chat.other.avatar_url}
                       alt={chat.other.display_name}
-                      className={`h-14 w-14 rounded-full object-cover ring-2 transition group-hover:ring-[#6C63FF] ${
-                        hasUnread ? 'ring-[#6C63FF]/60' : 'ring-white/10'
+                      className={`h-14 w-14 rounded-full object-cover transition group-hover:ring-[#6C63FF] ${
+                        isSponsor
+                          ? 'ring-2 ring-yellow-400'
+                          : hasUnread
+                            ? 'ring-2 ring-[#6C63FF]/60'
+                            : 'ring-2 ring-white/10'
                       }`}
                     />
                   ) : (
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-xl font-bold text-white">
+                    <div
+                      className={`flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-xl font-bold text-white ${
+                        isSponsor ? 'ring-2 ring-yellow-400' : ''
+                      }`}
+                    >
                       {chat.other.display_name[0]?.toUpperCase()}
                     </div>
                   )}
@@ -96,14 +105,16 @@ export function ChatsList({
                     <div className="flex min-w-0 items-center gap-1.5">
                       <span
                         className={`truncate ${
-                          hasUnread
-                            ? 'font-bold text-white'
-                            : 'font-semibold text-white/90'
+                          isSponsor
+                            ? 'gradient-text-gold font-bold'
+                            : hasUnread
+                              ? 'font-bold text-white'
+                              : 'font-semibold text-white/90'
                         }`}
                       >
                         {chat.other.display_name}
                       </span>
-                      {chat.other.is_sponsor && (
+                      {isSponsor && (
                         <Star className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />
                       )}
                     </div>
@@ -129,9 +140,7 @@ export function ChatsList({
 
                     <p
                       className={`line-clamp-1 text-sm ${
-                        hasUnread
-                          ? 'font-medium text-white'
-                          : 'text-white/50'
+                        hasUnread ? 'font-medium text-white' : 'text-white/50'
                       }`}
                     >
                       {chat.last_message || 'Нет сообщений'}

@@ -38,12 +38,14 @@ type Deal = {
     username: string;
     display_name: string;
     avatar_url: string | null;
+    is_sponsor: boolean;
   };
   artist: {
     id: string;
     username: string;
     display_name: string;
     avatar_url: string | null;
+    is_sponsor: boolean;
   };
 };
 
@@ -225,9 +227,15 @@ export function DealPageContent({
                 </div>
               )}
               <div>
-                <div className="font-semibold text-white group-hover:text-[#B794F6]">
-                  {otherPerson.display_name}
-                </div>
+              <div
+                className={`font-semibold ${
+                  otherPerson.is_sponsor
+                    ? 'gradient-text-gold'
+                    : 'text-white group-hover:text-[#B794F6]'
+                }`}
+              >
+                {otherPerson.display_name}
+              </div>
                 <div className="text-xs text-white/40">
                   @{otherPerson.username}
                 </div>

@@ -25,8 +25,8 @@ async function DealContent({ id }: { id: string }) {
       status, client_paid, artist_completed, client_confirmed,
       created_at, completed_at,
       service_id, order_id,
-      client:profiles!deals_client_id_fkey (id, username, display_name, avatar_url),
-      artist:profiles!deals_artist_id_fkey (id, username, display_name, avatar_url)
+      client:profiles!deals_client_id_fkey (id, username, display_name, avatar_url, is_sponsor),
+      artist:profiles!deals_artist_id_fkey (id, username, display_name, avatar_url, is_sponsor)
     `)
     .eq('id', id)
     .single();
