@@ -2,7 +2,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Star, Palette, MessageSquare } from 'lucide-react';
+import { Star, Palette, MessageSquare, Crown } from 'lucide-react';
 
 type ArtistRow = {
   id: string;
@@ -75,86 +75,131 @@ async function ArtistsList() {
 
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {artists.map((artist) => (
-        <Link
-          key={artist.id}
-          href={`/artist/${artist.username}`}
-          className="group"
-        >
-          <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-[#16161f]/60 p-6 text-center transition-all duration-500 hover:-translate-y-1 hover:border-[#6C63FF]/40 hover:shadow-2xl hover:shadow-[#6C63FF]/20">
-            <div className="pointer-events-none absolute -top-20 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-[#6C63FF]/20 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
+      {artists.map((artist) => {
+        const isSponsor = artist.is_sponsor;
 
-            <div className="relative">
-              <div className="relative mx-auto mb-4 h-24 w-24">
-                {artist.avatar_url ? (
-                  <img
-                    src={artist.avatar_url}
-                    alt={artist.display_name}
-                    className="h-full w-full rounded-full object-cover ring-2 ring-white/10 transition group-hover:ring-[#6C63FF]"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-3xl font-bold text-white">
-                    {artist.display_name[0]?.toUpperCase()}
-                  </div>
-                )}
-                {artist.is_sponsor && (
-                  <div className="absolute -right-1 top-0 flex h-7 w-7 items-center justify-center rounded-full bg-yellow-400 shadow-lg">
-                    <Star className="h-3.5 w-3.5 fill-black text-black" />
-                  </div>
-                )}
-              </div>
+        return (
+          <Link
+            key={artist.id}
+            href={`/artist/${artist.username}`}
+            className="group"
+          >
+            <div
+              className={`relative overflow-hidden rounded-3xl border bg-[#16161f]/60 p-6 text-center transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl ${
+                isSponsor
+                  ? 'border-yellow-400/30 shadow-lg shadow-yellow-400/10 hover:border-yellow-400/60 hover:shadow-yellow-400/20'
+                  : 'border-white/5 hover:border-[#6C63FF]/40 hover:shadow-[#6C63FF]/20'
+              }`}
+            >
+              {/* 🎯 Свечение при hover */}
+              <div
+                className={`pointer-events-none absolute -top-20 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100 ${
+                  isSponsor ? 'bg-yellow-400/30' : 'bg-[#6C63FF]/20'
+                }`}
+              />
 
-              <h3 className="display-title text-xl font-bold text-white transition group-hover:text-[#B794F6]">
-                {artist.display_name}
-              </h3>
-              <p className="mt-1 text-sm text-white/40">@{artist.username}</p>
+              <div className="relative">
+                {/* 🎯 Аватар */}
+                <div className="relative mx-auto mb-4 h-24 w-24">
+                  {/* Золотое свечение — если спонсор */}
+                  {isSponsor && (
+                    <div className="absolute inset-0 scale-110 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 opacity-60 blur-2xl" />
+                  )}
 
-              <div className="mt-3 flex items-center justify-center gap-2">
-                {artist.reviews_count > 0 ? (
-                  <>
-                    <div className="flex gap-0.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-3.5 w-3.5 ${
-                            star <= Math.round(artist.avg_rating)
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-white/15'
-                          }`}
-                        />
-                      ))}
+                  {artist.avatar_url ? (
+                    <img
+                      src={artist.avatar_url}
+                      alt={artist.display_name}
+                      className={`relative h-full w-full rounded-full object-cover transition ${
+                        isSponsor
+                          ? 'ring-2 ring-yellow-400 group-hover:ring-yellow-400/80'
+                          : 'ring-2 ring-white/10 group-hover:ring-[#6C63FF]'
+                      }`}
+                    />
+                  ) : (
+                    <div
+                      className={`relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[#6C63FF] to-[#B794F6] text-3xl font-bold text-white ${
+                        isSponsor ? 'ring-2 ring-yellow-400' : ''
+                      }`}
+                    >
+                      {artist.display_name[0]?.toUpperCase()}
                     </div>
-                    <span className="text-sm font-semibold text-white">
-                      {artist.avg_rating.toFixed(1)}
+                  )}
+
+                  {/* 🎯 Корона — если спонсор */}
+                  {isSponsor && (
+                    <div className="absolute -right-1 top-0 flex h-8 w-8 animate-pulse items-center justify-center rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 shadow-lg shadow-yellow-400/60">
+                      <Crown className="h-4 w-4 fill-black text-black" />
+                    </div>
+                  )}
+                </div>
+
+                {/* 🎯 Имя */}
+                <h3
+                  className={`display-title text-xl font-bold transition ${
+                    isSponsor
+                      ? 'gradient-text-gold'
+                      : 'text-white group-hover:text-[#B794F6]'
+                  }`}
+                >
+                  {artist.display_name}
+                </h3>
+                <p className="mt-1 text-sm text-white/40">@{artist.username}</p>
+
+                <div className="mt-3 flex items-center justify-center gap-2">
+                  {artist.reviews_count > 0 ? (
+                    <>
+                      <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-3.5 w-3.5 ${
+                              star <= Math.round(artist.avg_rating)
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-white/15'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm font-semibold text-white">
+                        {artist.avg_rating.toFixed(1)}
+                      </span>
+                      <span className="flex items-center gap-0.5 text-xs text-white/40">
+                        <MessageSquare className="h-3 w-3" />
+                        {artist.reviews_count}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-xs text-white/30">
+                      Пока нет отзывов
                     </span>
-                    <span className="flex items-center gap-0.5 text-xs text-white/40">
-                      <MessageSquare className="h-3 w-3" />
-                      {artist.reviews_count}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-xs text-white/30">
-                    Пока нет отзывов
-                  </span>
+                  )}
+                </div>
+
+                {artist.bio && (
+                  <p className="mt-4 line-clamp-2 text-sm text-white/60">
+                    {artist.bio}
+                  </p>
                 )}
-              </div>
 
-              {artist.bio && (
-                <p className="mt-4 line-clamp-2 text-sm text-white/60">
-                  {artist.bio}
-                </p>
-              )}
-
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <span className="flex items-center gap-1 rounded-full bg-[#6C63FF]/20 px-3 py-1 text-xs font-medium text-[#B794F6]">
-                  <Palette className="h-3 w-3" />
-                  Художник
-                </span>
+                {/* 🎯 Бейджи: Художник + PRO */}
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                  <span className="flex items-center gap-1 rounded-full bg-[#6C63FF]/20 px-3 py-1 text-xs font-medium text-[#B794F6]">
+                    <Palette className="h-3 w-3" />
+                    Художник
+                  </span>
+                  {isSponsor && (
+                    <span className="flex items-center gap-1 rounded-full border border-yellow-400/40 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 px-3 py-1 text-xs font-bold text-yellow-300 shadow-lg shadow-yellow-400/20">
+                      <Crown className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                      PRO
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </Link>
-      ))}
+          </Link>
+        );
+      })}
     </div>
   );
 }
