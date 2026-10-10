@@ -313,9 +313,15 @@ export function ArtistPageContent({
     month: 'long',
   });
 
-  const isArtist = profile.role === 'artist' || profile.role === 'both';
-  const isClient = profile.role === 'client' || profile.role === 'both';
+  // 🎯 Роль — для бейджа
+  const isArtistRole = profile.role === 'artist' || profile.role === 'both';
+  const isClientRole = profile.role === 'client' || profile.role === 'both';
   const isOwnProfile = profile.id === userId;
+
+  // 🎯 Что показывать — по факту наличия контента
+  const showArtworks = artworks.length > 0 || isArtistRole;
+  const showServices = services.length > 0 || isArtistRole;
+  const showOrders = orders.length > 0 || isClientRole;
 
   const tabs: Array<{
     key: 'artworks' | 'services' | 'orders' | 'reviews';
@@ -324,11 +330,13 @@ export function ArtistPageContent({
     count: number;
   }> = [];
 
-  if (isArtist) {
+  if (showArtworks) {
     tabs.push({ key: 'artworks', label: 'Работы', icon: ImageIcon, count: artworks.length });
+  }
+  if (showServices) {
     tabs.push({ key: 'services', label: 'Услуги', icon: Briefcase, count: services.length });
   }
-  if (isClient) {
+  if (showOrders) {
     tabs.push({ key: 'orders', label: 'Заказы', icon: ShoppingBag, count: orders.length });
   }
   tabs.push({ key: 'reviews', label: 'Отзывы', icon: MessageSquare, count: reviews.length });
@@ -375,7 +383,6 @@ export function ArtistPageContent({
 
         <div className="relative -mt-20 px-8 pb-8 md:-mt-24 md:px-12 md:pb-12">
           <div className="flex flex-col items-center gap-8 md:flex-row md:items-end">
-            {/* 🎯 АВАТАР — золотая обводка если спонсор */}
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -412,7 +419,6 @@ export function ArtistPageContent({
                 </div>
               )}
 
-              {/* 🎯 Корона с пульсом */}
               {profile.is_sponsor && (
                 <motion.div
                   animate={{ scale: [1, 1.08, 1] }}
@@ -425,7 +431,6 @@ export function ArtistPageContent({
             </motion.div>
 
             <div className="flex-1 text-center md:pb-2 md:text-left">
-              {/* 🎯 ИМЯ — золотой градиент если спонсор */}
               <motion.h1
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -454,19 +459,18 @@ export function ArtistPageContent({
                 className="mt-2 flex flex-wrap items-center justify-center gap-3 md:justify-start"
               >
                 <span className="text-lg text-white/40">@{profile.username}</span>
-                {isArtist && (
+                {isArtistRole && (
                   <span className="flex items-center gap-1 rounded-full bg-[#6C63FF]/20 px-3 py-1 text-xs font-medium text-[#B794F6]">
                     <Palette className="h-3 w-3" />
                     Художник
                   </span>
                 )}
-                {isClient && (
+                {isClientRole && (
                   <span className="flex items-center gap-1 rounded-full bg-[#4FD1C5]/20 px-3 py-1 text-xs font-medium text-[#4FD1C5]">
                     <ShoppingBag className="h-3 w-3" />
                     Заказчик
                   </span>
                 )}
-                {/* 🎯 Бейдж PRO */}
                 {profile.is_sponsor && (
                   <motion.span
                     animate={{ scale: [1, 1.04, 1] }}
@@ -518,22 +522,23 @@ export function ArtistPageContent({
 
             <SocialLinks profile={profile} />
 
+            {/* 🎯 Статистика — по факту контента */}
             <div className="mt-6 flex flex-wrap items-center justify-center gap-6 md:justify-start">
-              {isArtist && (
-                <>
-                  <div className="flex items-center gap-2 text-white/70">
-                    <ImageIcon className="h-4 w-4 text-[#B794F6]" />
-                    <span className="font-semibold text-white">{artworks.length}</span>
-                    <span className="text-sm">работ</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-white/70">
-                    <Briefcase className="h-4 w-4 text-[#B794F6]" />
-                    <span className="font-semibold text-white">{services.length}</span>
-                    <span className="text-sm">услуг</span>
-                  </div>
-                </>
+              {showArtworks && (
+                <div className="flex items-center gap-2 text-white/70">
+                  <ImageIcon className="h-4 w-4 text-[#B794F6]" />
+                  <span className="font-semibold text-white">{artworks.length}</span>
+                  <span className="text-sm">работ</span>
+                </div>
               )}
-              {isClient && (
+              {showServices && (
+                <div className="flex items-center gap-2 text-white/70">
+                  <Briefcase className="h-4 w-4 text-[#B794F6]" />
+                  <span className="font-semibold text-white">{services.length}</span>
+                  <span className="text-sm">услуг</span>
+                </div>
+              )}
+              {showOrders && (
                 <div className="flex items-center gap-2 text-white/70">
                   <ShoppingBag className="h-4 w-4 text-[#4FD1C5]" />
                   <span className="font-semibold text-white">{orders.length}</span>
